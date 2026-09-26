@@ -6,7 +6,7 @@
 - **Nhóm peer test bài của mình:**
 - **Nhóm mình test bài của:**
 - **Problem family:** Drivable area
-- **Nguồn ảnh:** lisa + bdd100k + gtsdb
+- **Nguồn ảnh:** bdd100k
 
 | Thành viên         | GitHub       | Vai trò chính | File phụ trách                                                                                              |
 | ------------------ | ------------ | ------------- | ----------------------------------------------------------------------------------------------------------- |
