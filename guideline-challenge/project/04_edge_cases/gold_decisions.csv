@@ -10,4 +10,6 @@ BDD22,d1,class=drivable_area (CVAT: road); IGNORE reflection on wet surface,crit
 BDD22,d2,class=drivable_area (CVAT: road); LABEL all visible lanes,major,BDD22 có nhiều làn, label hết vùng drivable
 BDD19,d1,class=drivable_area (CVAT: road); count=2; separate lanes at merge point,major,BDD19 có merge point, tách thành 2 polygon riêng biệt
 BDD19,d2,attribute:state=clear for all visible drivable_area,minor,Không có ambiguity ở BDD19,
-BDD19,d3,geometry: polygon must follow lane markings at merge,minor, At merge point, polygon theo vạch kẻ làn
+BDD19,d3,geometry: polygon must follow lane markings at merge,minor,At merge point, polygon theo vạch kẻ làn
+BDD14,d1,class=drivable_area (CVAT: road); LABEL entire road surface; count=1,major,BDD14 đường thẳng rõ ràng, 1 vùng drivable area liên tục
+BDD14,d2,attribute:state=clear; needs_review=false,minor,BDD14 không có occlusion hay ambiguity
