@@ -1,209 +1,737 @@
-# QA plan + quality gates
+# QA Plan + Quality Gates
 
-## Flow
+**Project:** Drivable Area Segmentation
+**CVAT class:** `road`
+**Guideline semantic:** `drivable_area`
+**Guideline version:** v2 → v3 sau blind handoff
 
-Guideline → Calibration → Production → Self-QC → Review → Rework → Quality Gate.
+QA được thiết kế để kiểm tra hai loại chất lượng chính:
 
-### Reviewer và phạm vi review
+1. **Semantic correctness:** annotator có quyết định đúng vùng `drivable_area` hay không.
+2. **Geometry correctness:** polygon có bám đúng boundary của vùng drivable area nhìn thấy hay không.
 
-* Mỗi annotator thực hiện **self-QC 100% annotation** trước khi submit.
-* Reviewer kiểm tra **100% critical-risk samples** và **30% random samples** của mỗi annotator trong production set.
-* Nếu một annotator có defect rate ≥ 10% trong lần review đầu, reviewer mở rộng kiểm tra lên **100% output của annotator đó** cho batch hiện tại.
-* Các sample thuộc nhóm `edge`, `ambiguity`, `conflict`, `occlusion` hoặc `low_visibility` được ưu tiên review.
-* Calibration và blind-handoff samples được review toàn bộ vì đây là các mẫu dùng để đánh giá transferability của guideline.
-
-### Sampling rule
-
-Sample QA được chọn theo ba lớp:
-
-1. **Risk-based sampling:** 100% các ảnh có tình huống dễ nhầm:
-
-   * sidewalk tiếp giáp road
-   * parking area
-   * road shoulder
-   * intersection
-   * unclear road boundary
-   * occlusion
-   * shadow / low visibility
-
-2. **Random sampling:** 30% annotation còn lại được chọn ngẫu nhiên theo annotator.
-
-3. **Annotator-based sampling:** nếu annotator có defect rate ≥ 10%, chuyển sang 100% review cho batch đó.
-
-Mục tiêu là không chỉ kiểm tra các ảnh dễ mà phải phát hiện cả lỗi trong các ảnh bình thường.
-
-### Issue management
-
-Mỗi defect được ghi vào calibration report, blind feedback hoặc QA review log với:
-
-* `sample_id`
-* `defect_type`
-* `severity`
-* `evidence`
-* `expected_decision`
-* `actual_decision`
-* `root_cause`
-* `action`
-* `status`
-
-Issue chỉ được đóng khi:
-
-1. Annotation đã được sửa nếu cần.
-2. Reviewer xác nhận correction.
-3. Nếu nguyên nhân là guideline gap, guideline được cập nhật và tăng version.
-4. Nếu issue có thể ảnh hưởng các sample khác, các sample cùng pattern phải được re-check.
-
-### Guideline gap
-
-Khi phát hiện guideline gap:
-
-1. Ghi issue vào review/calibration evidence.
-2. Xác định đó là `guideline_gap`, `data_ambiguity` hay `execution_error`.
-3. Nếu là `guideline_gap`, cập nhật rule, example hoặc escalation rule.
-4. Tăng version guideline:
-
-   * v1: initial guideline
-   * v2: sau calibration
-   * v3: sau blind handoff
-5. Ghi thay đổi và evidence vào `08_revision_log.md`.
-6. Re-check các annotation có cùng tình huống.
+QA ưu tiên các lỗi có thể làm downstream autonomous-vehicle perception system học sai vùng xe có thể di chuyển.
 
 ---
 
-## Defect severity
+## 1. QA Flow
 
-| Severity     | Định nghĩa cho project này                                                                                                        | Ví dụ                                                                                              | Action mặc định                                |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| **Critical** | Sai quyết định làm thay đổi đáng kể vùng đường mà ego vehicle được phép đi, có nguy cơ làm downstream model học sai drivable area | Label sidewalk/median/parking area thành drivable road; bỏ sót phần lớn vùng road tại intersection | Rework ngay + kiểm tra các sample cùng pattern |
-| **Major**    | Annotation sai đáng kể về boundary hoặc semantic class nhưng không làm thay đổi toàn bộ quyết định drivable/undrivable            | Polygon ăn rộng sang sidewalk/shoulder; bỏ sót một phần lớn road; boundary sai rõ rệt              | Rework + reviewer kiểm tra lại                 |
-| **Minor**    | Sai lệch nhỏ về geometry nhưng semantic decision vẫn đúng                                                                         | Boundary lệch vài pixel; polygon hơi thừa/thiếu ở vùng không ảnh hưởng quyết định chính            | Correct nếu phát hiện; theo dõi trend          |
-| **Question** | Case không đủ bằng chứng hoặc guideline chưa quy định rõ, chưa thể kết luận annotator đúng/sai                                    | Road và parking area không thể phân biệt rõ từ ảnh; boundary bị che hoàn toàn                      | Escalate + xem xét guideline                   |
+```text
+Guideline v2
+    ↓
+Calibration
+    ↓
+Calibration review
+    ↓
+Freeze gold
+    ↓
+Blind handoff
+    ↓
+Peer annotation
+    ↓
+Score / GTS
+    ↓
+Root-cause analysis
+    ↓
+Guideline v3
+    ↓
+Final QA gate
+```
 
-### Critical-risk examples
+### Nguyên tắc
 
-Các lỗi sau được coi là critical:
+* Annotator phải tự kiểm tra output trước khi export.
+* QA không chỉ kiểm tra hình dạng polygon mà phải kiểm tra **semantic decision**.
+* Critical / high-risk cases phải được kiểm tra trước random samples.
+* Không tự suy đoán đối với case thiếu bằng chứng; sử dụng `needs_review` và `image_escalate` theo guideline.
+* Mọi lỗi phải được phân loại thành:
 
-* Gán **sidewalk** thành drivable road.
-* Gán **median/island** thành drivable road.
-* Gán **parking area** thành drivable road khi guideline xác định khu vực này ngoài scope.
-* Bỏ toàn bộ vùng road chính khỏi annotation.
-* Boundary làm vùng drivable chuyển sang một khu vực clearly non-drivable.
+  * `guideline_gap`
+  * `data_ambiguity`
+  * `execution_error`
+* Nếu lỗi xuất phát từ guideline, phải cập nhật guideline và ghi vào `08_revision_log.md`.
 
 ---
 
-## Metrics
+# 2. Scope của QA
 
-| Metric                   | Cách tính                                                        | Vì sao phù hợp với bài toán                                            |
-| ------------------------ | ---------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| **Decision Accuracy**    | số quyết định đúng / tổng số quyết định được review              | Đo annotator có áp dụng đúng inclusion/exclusion rule hay không        |
-| **Critical Defect Rate** | số critical defects / tổng số samples được review                | Critical error có tác động lớn nhất đến downstream drivable-area model |
-| **Major Defect Rate**    | số major defects / tổng số samples được review                   | Theo dõi các lỗi geometry/semantic đáng kể                             |
-| **Geometry IoU**         | Intersection over Union giữa annotation và gold/reference region | Đo chất lượng boundary của vùng drivable                               |
-| **Defect Escape Rate**   | defects phát hiện sau gate / tổng defects                        | Đo khả năng QA phát hiện lỗi trước khi release                         |
-| **Rework Rate**          | số samples phải sửa / tổng samples được review                   | Đo chi phí QA và độ ổn định của annotation                             |
-| **Guideline Gap Rate**   | số defects do guideline gap / tổng defects                       | Xác định QA đang phát hiện lỗi annotator hay lỗi specification         |
+QA kiểm tra các thành phần sau:
 
-### High-risk metric
+| Thành phần     | Nội dung kiểm tra                                                                 |
+| -------------- | --------------------------------------------------------------------------------- |
+| Class          | Chỉ sử dụng CVAT class `road`                                                     |
+| Semantic       | `road` phải đại diện cho `drivable_area`                                          |
+| Geometry       | Polygon bao phủ vùng drivable area nhìn thấy                                      |
+| Instance       | Mỗi vùng drivable area liên tục là một polygon                                    |
+| Inclusion      | Vùng đủ bằng chứng và width ≥ 2m phải được label                                  |
+| Exclusion      | Sidewalk, parking, shoulder, grass, empty land, reflection/glare phải được ignore |
+| Occlusion      | Áp dụng đúng rule 1–49%, 50–80%, 81–99%, 100%                                     |
+| `needs_review` | Chỉ dùng khi không thể quyết định chắc chắn                                       |
+| `state`        | Không tự gán giá trị nếu chưa có bằng chứng; default là `__undefined__`           |
+| Escalation     | Case ambiguity quan trọng phải dùng `image_escalate`                              |
+| Export         | Annotation phải được lưu và export đúng từ CVAT                                   |
 
-**Critical Defect Escape Rate**
+---
+
+# 3. Self-QC của Annotator
+
+Trước khi submit/export, annotator kiểm tra **100% annotation của chính mình**.
+
+### Checklist
+
+#### 3.1 Class
+
+* [ ] Tất cả polygon sử dụng class `road`.
+* [ ] Không tạo class khác ngoài ontology.
+* [ ] Không nhầm `road` của CVAT với semantic khác.
+
+> Trong project này: `CVAT road = guideline drivable_area`.
+
+#### 3.2 Geometry
+
+* [ ] Polygon bao phủ toàn bộ vùng drivable area nhìn thấy.
+* [ ] Boundary bám theo curb, mép đường hoặc boundary quan sát được.
+* [ ] Không kéo polygon vào vùng không có bằng chứng.
+* [ ] Không mở rộng polygon xuyên qua vùng bị che hoàn toàn.
+* [ ] Sai lệch boundary nằm trong tolerance của guideline khi có thể đánh giá.
+
+#### 3.3 Semantic
+
+* [ ] Không label sidewalk.
+* [ ] Không label parking-only area.
+* [ ] Không label road shoulder ngoài scope.
+* [ ] Không label grass / empty land.
+* [ ] Không label reflection/glare.
+* [ ] Không label vùng có width < 2m.
+* [ ] Crosswalk vẫn thuộc drivable area nếu nằm trong vùng đường.
+
+#### 3.4 Occlusion / visibility
+
+* [ ] Partial occlusion 1–49%: label.
+* [ ] Partial occlusion 50–80%: label + `needs_review=true`.
+* [ ] Heavy occlusion 81–99%: label + `needs_review=true`.
+* [ ] Full occlusion 100%: ignore.
+* [ ] Low visibility: chỉ label phần có đủ bằng chứng.
+
+#### 3.5 Escalation
+
+* [ ] Case không chắc chắn không được tự đoán.
+* [ ] Dùng `needs_review=true` khi uncertainty thuộc một region.
+* [ ] Dùng `image_escalate` khi ambiguity ảnh hưởng ở mức toàn ảnh / không thể tạo annotation đáng tin cậy.
+
+---
+
+# 4. Risk-based QA Sampling
+
+QA production được chia thành hai lớp.
+
+## 4.1 High-risk / critical samples
+
+Các sample có một hoặc nhiều tình huống sau phải được review:
+
+* reflection / glare
+* parking area
+* sidewalk / road boundary
+* road shoulder
+* occlusion
+* low visibility
+* snow / weather làm che boundary
+* intersection hoặc boundary khó xác định
+* case đã từng gây disagreement trong calibration
+* case có gold decision trong `gold_decisions.csv`
+
+Các sample này được ưu tiên review **100%**.
+
+Trong project hiện tại, calibration evidence đã cho thấy:
+
+* `BDD05`: disagreement về số lượng drivable-area polygons.
+* `BDD08`: disagreement liên quan reflection.
+* `BDD24`: boundary bị snow che.
+* `BDD18`: low visibility.
+* `BDD25`: wet road / reflection.
+* `BDD21`: vùng phía sau guardrail.
+* `BDD13`: occluded drivable area.
+
+Các pattern này được coi là risk patterns cần tiếp tục theo dõi.
+
+---
+
+## 4.2 Random samples
+
+Ngoài các high-risk samples, chọn **30% random samples** trong production output để kiểm tra.
+
+Mục đích:
+
+* phát hiện lỗi ở các ảnh nhìn bình thường;
+* tránh việc annotator chỉ được QA ở những case khó;
+* kiểm tra consistency của execution.
+
+Random sampling phải được thực hiện độc lập với annotator khi có thể.
+
+---
+
+# 5. Calibration QA
+
+Calibration được dùng để phát hiện disagreement trước khi freeze gold.
+
+Trong evidence hiện tại:
+
+* `BDD04`, `BDD06`, `BDD07`, `BDD09`, `BDD24`, `BDD26` có agreement cao.
+* `BDD05` có disagreement về polygon count.
+* `BDD08` có disagreement về polygon count.
+
+### Rule xử lý
+
+Nếu calibration disagreement xuất hiện:
 
 ```text
-Critical Defect Escape Rate
-= Critical defects discovered after QA gate
-  / Total critical defects
+Disagreement
+    ↓
+Kiểm tra guideline
+    ↓
+Có rule rõ?
+ ┌───┴────┐
+Yes      No
+ ↓        ↓
+Execution  Guideline gap
+error      ↓
+ ↓       Revise guideline
+Coaching   ↓
+          Re-calibration
 ```
 
-Target:
+Không được chỉ sửa annotation mà bỏ qua nguyên nhân specification nếu disagreement xuất phát từ guideline.
+
+---
+
+# 6. Defect Classification
+
+Mỗi defect phải được phân loại theo nguyên nhân.
+
+| Loại              | Ý nghĩa                                          | Ví dụ                                           |
+| ----------------- | ------------------------------------------------ | ----------------------------------------------- |
+| `guideline_gap`   | Rule chưa đủ rõ hoặc thiếu case                  | BDD05 gây disagreement về vùng nhỏ bị che       |
+| `data_ambiguity`  | Ảnh không đủ evidence để quyết định              | Boundary bị che hoàn toàn                       |
+| `execution_error` | Guideline đã rõ nhưng annotator thao tác sai     | Gán sai class, sai attribute                    |
+| `format_error`    | Annotation đúng semantic nhưng export/schema sai | Giá trị attribute dùng pipe thay vì giá trị đơn |
+
+### Evidence hiện tại
+
+`06_calibration_report.csv` đã ghi nhận:
+
+* `BDD05` count disagreement → `guideline_gap`
+* `BDD08` count disagreement → `guideline_gap`
+* `needs_review` formatting → `execution_error`
+
+Các issue này phải được phản ánh vào guideline/revision log nếu chúng ảnh hưởng đến annotation process.
+
+---
+
+# 7. Defect Severity
+
+## Critical
+
+Lỗi làm thay đổi đáng kể semantic của drivable area.
+
+Ví dụ:
+
+* Label sidewalk thành `road`.
+* Label parking-only area thành `road`.
+* Label reflection/glare thành drivable area.
+* Label median / clearly non-drivable area thành road.
+* Bỏ toàn bộ vùng drivable area chính.
+* Mở rộng polygon vào vùng rõ ràng không phải drivable area.
+
+**Action:**
 
 ```text
-Critical Defect Escape Rate = 0%
+Rework ngay
++
+Kiểm tra các sample có cùng pattern
 ```
 
-Không cho phép critical defect đi qua final quality gate.
+---
 
-### Geometry metric
+## Major
 
-Đối với các sample có gold/reference geometry:
+Lỗi semantic hoặc geometry đáng kể nhưng chưa làm thay đổi toàn bộ quyết định.
+
+Ví dụ:
+
+* Bỏ sót một phần đáng kể của drivable area.
+* Polygon mở rộng rõ ràng vào shoulder.
+* Xử lý sai partial occlusion.
+* Không sử dụng `needs_review=true` trong một ambiguity quan trọng.
+* Sai boundary lớn.
+
+**Action:**
+
+```text
+Rework
++
+Reviewer kiểm tra lại pattern tương tự
+```
+
+---
+
+## Minor
+
+Sai lệch nhỏ nhưng semantic decision vẫn đúng.
+
+Ví dụ:
+
+* Boundary lệch nhẹ.
+* Một số điểm polygon chưa thật sát boundary.
+* Geometry thừa/thiếu nhỏ nhưng không đưa polygon sang semantic region khác.
+
+**Action:**
+
+```text
+Correct nếu phát hiện
++
+Theo dõi trend
+```
+
+---
+
+## Question / Escalation
+
+Case không đủ evidence hoặc guideline chưa đủ rõ để kết luận.
+
+Ví dụ:
+
+* Boundary road/parking bị che hoàn toàn.
+* Không thể xác định vùng phía trước có tiếp tục là drivable area.
+* Reflection/glare che mất boundary.
+* Low visibility làm semantic boundary không thể xác định.
+
+**Action:**
+
+```text
+Không tự đoán
+↓
+needs_review / image_escalate
+↓
+Ghi evidence
+↓
+Reviewer quyết định
+```
+
+---
+
+# 8. QA Metrics
+
+## 8.1 Decision Accuracy
+
+Đo khả năng áp dụng đúng semantic rule.
+
+```text
+Decision Accuracy
+= số decision đúng / tổng decision được review
+```
+
+Decision bao gồm:
+
+* LABEL
+* IGNORE
+* `needs_review`
+* ESCALATE
+* class
+* attribute
+
+Đặc biệt tập trung vào các decision có trong `gold_decisions.csv`.
+
+### Target
+
+```text
+Decision Accuracy ≥ 95%
+```
+
+Threshold này là **project threshold**, không phải industry standard.
+
+---
+
+# 9. Critical Defect Rate
+
+```text
+Critical Defect Rate
+= số critical defects / tổng samples được review
+```
+
+### Gate
+
+```text
+Critical Defect Rate = 0
+```
+
+Critical defect không được phép tồn tại tại final release.
+
+---
+
+# 10. Major Defect Rate
+
+```text
+Major Defect Rate
+= số major defects / tổng samples được review
+```
+
+Major defect phải được rework hoặc có justification được reviewer chấp nhận.
+
+---
+
+# 11. Geometry Quality
+
+Đối với sample có gold/reference geometry:
 
 ```text
 IoU = Intersection Area / Union Area
 ```
 
-Target đề xuất:
+Có thể sử dụng IoU để đánh giá polygon giữa peer output và reference/gold.
+
+### Project threshold
 
 ```text
-PASS:   IoU ≥ 0.90
-WARN:   0.80 ≤ IoU < 0.90
-FAIL:   IoU < 0.80
+PASS: IoU ≥ 0.90
+
+WARN: 0.80 ≤ IoU < 0.90
+
+FAIL: IoU < 0.80
 ```
 
-Các threshold này là **project thresholds**, không phải industry standard.
+Đây là threshold do project đặt ra để kiểm soát geometry; không coi đây là industry standard.
+
+IoU không được dùng thay thế semantic review. Một polygon có IoU khá cao nhưng label nhầm một vùng semantic quan trọng vẫn có thể là Critical/Major defect.
 
 ---
 
-## Quality gate
+# 12. Blind Handoff QA
+
+Blind handoff là bước kiểm tra **transferability** của guideline.
+
+Peer phải:
+
+1. Nhận guideline và CVAT task.
+2. Không được xem `gold_decisions.csv`.
+3. Không được xem edge-case gold trước khi label.
+4. Tự annotation blind samples.
+5. Gửi CVAT export.
+6. Ghi clarification nếu guideline chưa đủ rõ.
+
+Owner sau đó:
 
 ```text
-PASS if:
-
-  Critical Defect Rate = 0
-  AND Critical Defect Escape Rate = 0
-  AND Decision Accuracy ≥ 95%
-  AND Geometry IoU ≥ 0.90 on gold/reference samples
-  AND all identified major defects are reworked
-  AND no unresolved guideline gap affects production labels
+Peer export
+    ↓
+make score
+    ↓
+transfer_score.csv
+    ↓
+make gts
+    ↓
+GTS / decision accuracy
+    ↓
+Root-cause analysis
+    ↓
+peer_feedback.md
+    ↓
+Guideline v3
 ```
-
-```text
-REWORK if:
-
-  Critical Defect Rate > 0
-  OR Decision Accuracy < 95%
-  OR Geometry IoU < 0.90
-  OR unresolved major defects remain
-  OR repeated errors indicate an unclear guideline rule
-```
-
-```text
-REJECT / ESCALATE if:
-
-  A critical semantic ambiguity cannot be resolved from the image
-  AND the current guideline does not define the case.
-
-  → Mark as ESCALATE
-  → Record evidence
-  → Update guideline or add an explicit exception
-  → Re-review affected samples
-```
-
-## Release rule
-
-Một batch chỉ được release khi:
-
-1. Không còn **critical defect** chưa xử lý.
-2. Major defects đã được rework hoặc có justification được reviewer chấp nhận.
-3. Decision Accuracy đạt ≥ 95%.
-4. Geometry IoU trên gold/reference samples đạt ≥ 0.90.
-5. Các guideline gap có ảnh hưởng đến production đã được cập nhật.
-6. Reviewer xác nhận QA evidence đầy đủ.
 
 ---
 
-## Trade-off
+# 13. Blind QA Sampling
 
-QA tập trung mạnh vào **critical semantic errors** thay vì yêu cầu mọi boundary đều hoàn hảo đến từng pixel.
+Blind set phải bao phủ nhiều loại tình huống thay vì chỉ ảnh bình thường.
 
-Lý do là downstream use case của Driveable Road ưu tiên việc phân biệt chính xác:
+Theo `sample_pack.csv`, blind set hiện có:
 
-**drivable road vs non-drivable region**
+| Sample | Risk           |
+| ------ | -------------- |
+| BDD18  | low visibility |
+| BDD21  | critical       |
+| BDD22  | ambiguity      |
+| BDD19  | edge           |
 
-hơn là phạt một sai lệch geometry rất nhỏ ở boundary.
+Mục đích là kiểm tra peer có thể áp dụng guideline mà **không cần owner giải thích trực tiếp** hay không.
 
-Vì vậy:
+---
 
-* Critical semantic error → luôn phải rework.
-* Major geometry error → phải rework.
-* Minor boundary deviation → có thể chấp nhận nếu không thay đổi semantic decision.
-* Ambiguous case → không tự đoán; dùng `ESCALATE` và ghi evidence.
+# 14. Transferability Metrics
 
-Thiết kế này cân bằng giữa **annotation cost** và **downstream risk**: dành nhiều QA effort nhất cho các lỗi có khả năng làm model học sai vùng xe có thể di chuyển.
+## Decision correctness
+
+GTS phải kiểm tra:
+
+* đúng inclusion/exclusion;
+* đúng class;
+* đúng attribute;
+* đúng ignore;
+* đúng escalation.
+
+Không chỉ kiểm tra số lượng polygon.
+
+---
+
+## Critical decision correctness
+
+Các critical decision phải đúng.
+
+Ví dụ:
+
+```text
+parking → IGNORE
+reflection → IGNORE
+clearly non-drivable → IGNORE
+drivable area → LABEL
+```
+
+Critical semantic error trong blind set phải được điều tra nguyên nhân.
+
+---
+
+## Clarification independence
+
+Theo dõi số lượng câu hỏi peer phải hỏi owner.
+
+```text
+Clarification count
+= số câu hỏi peer cần hỏi trong blind window
+```
+
+Câu hỏi càng nhiều cho cùng một rule cho thấy guideline có thể chưa đủ actionable.
+
+Tuy nhiên, câu hỏi trung thực **không tự động là defect**. Cần phân loại câu hỏi thành:
+
+* guideline gap;
+* data ambiguity;
+* execution issue.
+
+---
+
+# 15. Guideline Gap Handling
+
+Khi QA phát hiện guideline gap:
+
+### Bước 1
+
+Ghi issue:
+
+```text
+sample_id
+defect_type
+severity
+evidence
+expected_decision
+actual_decision
+root_cause
+action
+status
+```
+
+### Bước 2
+
+Phân loại:
+
+```text
+guideline_gap
+data_ambiguity
+execution_error
+```
+
+### Bước 3
+
+Nếu là `guideline_gap`:
+
+* sửa rule;
+* thêm example nếu cần;
+* thêm escalation rule nếu cần;
+* tăng guideline version.
+
+### Bước 4
+
+Ghi thay đổi vào:
+
+```text
+project/08_revision_log.md
+```
+
+### Bước 5
+
+Re-check các sample có cùng pattern.
+
+---
+
+# 16. Revision Gate
+
+Project sử dụng:
+
+```text
+v1 = initial guideline
+v2 = sau calibration
+v3 = sau blind handoff
+```
+
+Hiện tại guideline đã ở **v2** và revision log đã ghi các thay đổi liên quan:
+
+* mapping `CVAT road = drivable_area`;
+* rule về object count;
+* occlusion/reflection;
+* minimum size;
+* attribute format.
+
+Sau blind handoff, các finding phải được dùng để quyết định nội dung **v3**.
+
+Không tăng version chỉ để hoàn thành checklist; mỗi revision phải có evidence.
+
+---
+
+# 17. Final Quality Gate
+
+Một batch được **PASS** khi đáp ứng tất cả điều kiện:
+
+```text
+1. Critical Defect Rate = 0
+
+2. Không còn critical defect chưa xử lý
+
+3. Major defects đã được rework
+   hoặc có justification được reviewer chấp nhận
+
+4. Decision Accuracy ≥ 95%
+
+5. Gold/reference geometry đạt IoU ≥ 0.90
+   trên các sample được đánh giá geometry
+
+6. Không còn guideline gap chưa xử lý
+   có khả năng ảnh hưởng production
+
+7. Các critical-risk samples đã được review
+
+8. Blind handoff đã được score
+
+9. Peer feedback đã được phân loại nguyên nhân
+
+10. Guideline revision đã được ghi trong 08_revision_log.md
+
+11. QA evidence và export cần thiết đã được lưu trong repo
+```
+
+---
+
+# 18. Rework Gate
+
+Chuyển sang **REWORK** nếu xảy ra một trong các trường hợp:
+
+```text
+Critical defect > 0
+OR
+Decision Accuracy < 95%
+OR
+Geometry IoU < 0.90 trên gold/reference sample
+OR
+Major defect chưa được xử lý
+OR
+Một pattern lỗi lặp lại trên nhiều sample
+OR
+Guideline gap ảnh hưởng production chưa được cập nhật
+```
+
+Sau rework phải kiểm tra lại sample lỗi và các sample cùng pattern.
+
+---
+
+# 19. Escalation Gate
+
+Không ép annotator đưa ra decision khi ảnh không đủ evidence.
+
+Nếu:
+
+```text
+Không đủ evidence
++
+Guideline không thể quyết định
+```
+
+thì:
+
+```text
+ESCALATE
+↓
+needs_review / image_escalate
+↓
+record evidence
+↓
+reviewer decision
+↓
+update guideline nếu cần
+```
+
+Đặc biệt áp dụng cho:
+
+* boundary bị che;
+* ambiguity road / sidewalk;
+* ambiguity road / parking;
+* low visibility;
+* reflection/glare che boundary.
+
+---
+
+# 20. QA Evidence
+
+Các bằng chứng QA chính của project nằm ở:
+
+| File                                     | Vai trò                               |
+| ---------------------------------------- | ------------------------------------- |
+| `06_calibration_measure.csv`             | disagreement giữa annotator           |
+| `06_calibration_report.csv`              | diagnosis + action sau calibration    |
+| `04_edge_cases/gold_decisions.csv`       | expected decisions                    |
+| `07_blind_handoff/clarification_log.csv` | câu hỏi của peer                      |
+| `07_blind_handoff/peer_feedback.md`      | feedback + root cause                 |
+| `08_revision_log.md`                     | lịch sử thay đổi guideline            |
+| `transfer_score.csv`                     | kết quả blind handoff                 |
+| GTS                                      | kiểm tra transferability              |
+| CVAT export                              | evidence geometry + class + attribute |
+
+QA result phải truy xuất được từ annotation → defect → evidence → action.
+
+---
+
+# 21. QA Philosophy
+
+QA của project không cố biến mọi sai lệch polygon nhỏ thành lỗi nghiêm trọng.
+
+Thứ tự ưu tiên là:
+
+```text
+1. Semantic correctness
+       ↓
+2. Critical inclusion / exclusion
+       ↓
+3. Correct handling of ambiguity
+       ↓
+4. Geometry correctness
+       ↓
+5. Small boundary refinement
+```
+
+Lý do:
+
+Downstream use case cần phân biệt chính xác:
+
+```text
+DRIVABLE AREA
+vs
+NON-DRIVABLE AREA
+```
+
+Do đó:
+
+* Gán sidewalk thành road → Critical.
+* Gán parking thành road → Critical.
+* Gán reflection thành road → Critical.
+* Bỏ sót một phần đáng kể road → Major.
+* Boundary lệch nhỏ nhưng semantic vẫn đúng → Minor.
+* Không đủ bằng chứng → Escalate thay vì đoán.
+
+Mục tiêu cuối cùng của QA là bảo đảm **một annotator hoặc nhóm peer không trực tiếp tham gia thiết kế vẫn có thể đọc guideline, thao tác CVAT và tạo annotation nhất quán với gold expectation**.
