@@ -1,9 +1,33 @@
 [
   {
     "name": "road",
-    "id": 870,
-    "color": "#cc3366",
-    "type": "any",
+    "id": 871,
+    "color": "#F9A825",
+    "type": "polygon",
+    "attributes": [
+      {
+        "id": 28,
+        "name": "state",
+        "input_type": "select",
+        "mutable": true,
+        "values": ["__undefined__", "red", "yellow", "green", "off", "unknown"],
+        "default_value": "__undefined__"
+      },
+      {
+        "id": 29,
+        "name": "needs_review",
+        "input_type": "checkbox",
+        "mutable": false,
+        "values": ["false"],
+        "default_value": "false"
+      }
+    ]
+  },
+  {
+    "name": "image_escalate",
+    "id": 872,
+    "color": "#8E24AA",
+    "type": "tag",
     "attributes": []
   }
 ]
