@@ -1,1 +1,6 @@
 time,asker,question,answered_how,guideline_change
+2026-09-26T17:40:00Z,Nguyễn Văn A,Rule nào rõ nhất / giúp quyết định nhanh nhất?,not_answered_in_blind_window,v3: nhấn mạnh rule rõ ràng
+2026-09-26T17:42:00Z,Nguyễn Văn A,Rule nào mơ hồ hoặc phải tự suy diễn (IGNORE rule)?,not_answered_in_blind_window,v3: bổ sung ví dụ và định nghĩa ranh giới
+2026-09-26T17:45:00Z,Nguyễn Văn A,Sample nào khiến guideline "vỡ" (BDD18 ảnh đêm)?,not_answered_in_blind_window,v3: thêm escalation rule cho ảnh đêm
+2026-09-26T17:48:00Z,Nguyễn Văn A,Attribute/default nào trong CVAT dễ gây thao tác sai?,not_answered_in_blind_window,v3: làm rõ rule đặt state và needs_review
+2026-09-26T17:50:00Z,Nguyễn Văn A,Một thay đổi cụ thể giúp annotator mới ít hỏi hơn?,not_answered_in_blind_window,v3: thêm decision tree và ví dụ visual

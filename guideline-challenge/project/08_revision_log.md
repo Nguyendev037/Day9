@@ -21,3 +21,11 @@ Cột Version ghi dạng `v1`, `v2`, `v3` — `make status` tìm dòng bảng c�
 | v2 | Làm rõ rule guardrail boundary | BDD21: polygon phải kết thúc TẠI CHÂN hộ lan, không vượt qua | 06_calibration_report.csv dòng 5, BDD21 |
 | v2 | Thêm rule cho mảng bê tông vá (surface transition) | BDD19: ranh giới mảng vá không rõ → gán state=ambiguous | 06_calibration_report.csv dòng 4, BDD19 |
 | v2 | Cập nhật examples minh họa cho các rule mới | Thêm chi tiết vào bảng Examples (mục 6) và Common mistakes (mục 7) | 02_guideline.md mục 6 & 7 |
+| v3 | Thêm ví dụ hình ảnh + định nghĩa ranh giới cho rule IGNORE | Rule IGNORE mơ hồ, peer nhầm lẫn sidewalk/curb/reflection với drivable area | clarification_log.csv dòng 2, peer_feedback.md Q2 |
+| v3 | Thêm escalation rule: "Nếu không xác định được ranh giới do tối → ESCALATE" | Ảnh đêm (BDD18) khiến peer khó quyết định, guideline chưa có rule | clarification_log.csv dòng 3, peer_feedback.md Q3, BDD18 |
+| v3 | Làm rõ rule đặt attribute `state` (clear/ambiguous/unclear) | Peer không biết khi nào đặt state=clear vs ambiguous, để default | clarification_log.csv dòng 4, peer_feedback.md Q4 |
+| v3 | Thêm ví dụ cho trường hợp needs_review=true (occlusion, đêm, reflection) | Peer bỏ sót needs_review=true cho vùng tối đêm | clarification_log.csv dòng 2-3, peer_feedback.md Q4, BDD18,d1 |
+| v3 | Làm rõ rule "separate lanes at merge" với hình minh họa | Peer vẽ 1 polygon tại merge point (BDD19,d1) | peer_feedback.md phần 2 |
+| v3 | Thêm hình highlight vùng sidewalk/curb không phải drivable area | Peer không ignore sidewalk/curb (BDD18,d3) | peer_feedback.md phần 2 |
+| v3 | Thêm hình minh họa vùng phía sau guardrail không phải drivable area | Peer không ignore guardrail area (BDD21,d1) | peer_feedback.md phần 2 |
+| v3 | Thêm hình phân biệt reflection vs drivable area thật | Peer không ignore reflection (BDD22,d1) | peer_feedback.md phần 2 |
