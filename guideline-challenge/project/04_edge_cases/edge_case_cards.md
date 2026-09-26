@@ -14,7 +14,7 @@ File này là kho nội bộ của nhóm, **không gửi cho peer**. Card dùng 
 
 ---
 
-**Mapping CVAT ↔ Guideline:**
+**Mapping CVAT <-> Guideline:**
 Trong CVAT, class được gọi là `road`. Trong guideline, semantic là `drivable_area`.
 Tất cả các case dưới đây dùng semantic `drivable_area`, nhưng khi implement trong CVAT, dùng class `road`.
 

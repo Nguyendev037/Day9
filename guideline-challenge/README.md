@@ -11,12 +11,12 @@ không. Definition of done: một nhóm khác dùng guideline + CVAT task của 
 
 ## Ai làm gì
 
-| Vai | Được làm | Không làm |
-|---|---|---|
-| Nhóm bạn | Research, chọn scope, thiết kế ontology/guideline, setup CVAT, tạo edge case, QA, test nhóm khác | Hỏi giảng viên "đáp án label đúng là gì" |
-| Lab Coach | Giữ timeline, hỗ trợ CVAT/login/import/export/git, ghép cặp, xác nhận gold đã freeze | Sửa guideline, quyết định domain semantics thay nhóm |
-| Giảng viên | Briefing, duyệt topic, chấm cuối | Đưa starter solution, giải edge case thay nhóm |
-| Nhóm peer | Dùng guideline/task như annotator mới, label blind sample, góp ý usability | Xem gold trước khi test, nhờ owner "giảng lại" guideline trong blind window |
+| Vai        | Được làm                                                                                         | Không làm                                                                   |
+| ---------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| Nhóm bạn   | Research, chọn scope, thiết kế ontology/guideline, setup CVAT, tạo edge case, QA, test nhóm khác | Hỏi giảng viên "đáp án label đúng là gì"                                    |
+| Lab Coach  | Giữ timeline, hỗ trợ CVAT/login/import/export/git, ghép cặp, xác nhận gold đã freeze             | Sửa guideline, quyết định domain semantics thay nhóm                        |
+| Giảng viên | Briefing, duyệt topic, chấm cuối                                                                 | Đưa starter solution, giải edge case thay nhóm                              |
+| Nhóm peer  | Dùng guideline/task như annotator mới, label blind sample, góp ý usability                       | Xem gold trước khi test, nhờ owner "giảng lại" guideline trong blind window |
 
 Hỏi "vẽ thế này đúng chưa?" sẽ được trả lời bằng câu hỏi ngược: rule của nhóm là gì, bằng chứng gì, nếu không đủ bằng
 chứng thì guideline có escalation path không?
@@ -33,56 +33,56 @@ chứng thì guideline có escalation path không?
    (`cvat-day2`, hoặc `cvat` nếu đã cài bản mới ở Day 8), chạy `docker compose start`, quay về thư mục
    `guideline-challenge/` chạy `make cvat-status`. Chi tiết: [GUIDE mục 1](GUIDE.md#1-bật-cvat-đã-cài).
 
-Nhóm 3–5 người (tối thiểu 2 — calibration cần ít nhất 2 người label độc lập). Lab Coach công bố cặp peer: A ↔ B,
-C ↔ D…; số nhóm lẻ thì ring 3 nhóm A → B → C → A.
+Nhóm 3–5 người (tối thiểu 2 — calibration cần ít nhất 2 người label độc lập). Lab Coach công bố cặp peer: A <-> B,
+C <-> D…; số nhóm lẻ thì ring 3 nhóm A → B → C → A.
 
 ## Lệnh dùng trong buổi
 
-| Việc | Có `make` | Không có `make` |
-|---|---|---|
-| Kiểm CVAT đang chạy | `make cvat-status` | `python lab9.py cvat` |
-| Xem danh sách ảnh | `make samples [SOURCE=bdd100k\|gtsdb\|lisa]` | `python lab9.py samples [--source …]` |
-| Gom ảnh một split để upload CVAT | `make pack SPLIT=calibration` | `python lab9.py pack calibration` |
-| Đo bất đồng calibration | `make calib FILES="project/06_calibration_exports/an.zip project/06_calibration_exports/binh.zip"` | `python lab9.py calib project/06_calibration_exports/an.zip project/06_calibration_exports/binh.zip` |
-| Freeze gold trước handoff | `make freeze` | `python lab9.py freeze` |
-| Tạo gói blind cho nhóm peer | `make handoff` | `python lab9.py handoff` |
-| Nhận export của peer, lập bảng chấm | `make score FILE=peer.zip` | `python lab9.py score peer.zip` |
-| Tính GTS | `make gts` | `python lab9.py gts` |
-| Xem gate G1–G6 và việc còn thiếu | `make status` | `python lab9.py status` |
-| Kiểm gói nộp cuối | `make check` | `python lab9.py check` |
-| (Lab Coach) Kiểm freeze còn nguyên | `make verify` | `python lab9.py verify` |
+| Việc                                | Có `make`                                                                                          | Không có `make`                                                                                      |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Kiểm CVAT đang chạy                 | `make cvat-status`                                                                                 | `python lab9.py cvat`                                                                                |
+| Xem danh sách ảnh                   | `make samples [SOURCE=bdd100k\|gtsdb\|lisa]`                                                       | `python lab9.py samples [--source …]`                                                                |
+| Gom ảnh một split để upload CVAT    | `make pack SPLIT=calibration`                                                                      | `python lab9.py pack calibration`                                                                    |
+| Đo bất đồng calibration             | `make calib FILES="project/06_calibration_exports/an.zip project/06_calibration_exports/binh.zip"` | `python lab9.py calib project/06_calibration_exports/an.zip project/06_calibration_exports/binh.zip` |
+| Freeze gold trước handoff           | `make freeze`                                                                                      | `python lab9.py freeze`                                                                              |
+| Tạo gói blind cho nhóm peer         | `make handoff`                                                                                     | `python lab9.py handoff`                                                                             |
+| Nhận export của peer, lập bảng chấm | `make score FILE=peer.zip`                                                                         | `python lab9.py score peer.zip`                                                                      |
+| Tính GTS                            | `make gts`                                                                                         | `python lab9.py gts`                                                                                 |
+| Xem gate G1–G6 và việc còn thiếu    | `make status`                                                                                      | `python lab9.py status`                                                                              |
+| Kiểm gói nộp cuối                   | `make check`                                                                                       | `python lab9.py check`                                                                               |
+| (Lab Coach) Kiểm freeze còn nguyên  | `make verify`                                                                                      | `python lab9.py verify`                                                                              |
 
 Tool không bao giờ quyết định label nào đúng. Nó kiểm quy trình (đủ file, freeze còn nguyên, blind không lộ gold) và
 tính điểm từ quyết định `correct` do nhóm owner điền.
 
 ## Trong repo
 
-| Đường dẫn | Là gì |
-|---|---|
-| `data/catalog.csv` | Danh sách ảnh: `sample_id`, nguồn, file, thời tiết/giờ/cảnh (BDD) hoặc frame (LISA) |
-| `data/bdd100k/BDD01.jpg …` | 26 ảnh BDD100K |
-| `data/gtsdb/GTS01 …` | 28 ảnh GTSDB (biển báo Đức, có ảnh không có biển) |
-| `data/lisa/LISA01.jpg …` | 30 frame LISA liên tiếp của một clip đèn giao thông ban ngày |
-| `project/` | Mọi thứ nhóm nộp. File còn chữ `TODO` là chưa xong |
-| `GUIDE.md` | Thao tác CVAT: tạo task, dán Guide, vẽ, export, xem export của peer |
-| `RUBRIC.md` | Người chấm nhìn gì, ở file nào |
-| `build/`, `handoff/` | Tool sinh ra (ảnh gom theo split, gói blind). Git bỏ qua hai thư mục này |
+| Đường dẫn                  | Là gì                                                                               |
+| -------------------------- | ----------------------------------------------------------------------------------- |
+| `data/catalog.csv`         | Danh sách ảnh: `sample_id`, nguồn, file, thời tiết/giờ/cảnh (BDD) hoặc frame (LISA) |
+| `data/bdd100k/BDD01.jpg …` | 26 ảnh BDD100K                                                                      |
+| `data/gtsdb/GTS01 …`       | 28 ảnh GTSDB (biển báo Đức, có ảnh không có biển)                                   |
+| `data/lisa/LISA01.jpg …`   | 30 frame LISA liên tiếp của một clip đèn giao thông ban ngày                        |
+| `project/`                 | Mọi thứ nhóm nộp. File còn chữ `TODO` là chưa xong                                  |
+| `GUIDE.md`                 | Thao tác CVAT: tạo task, dán Guide, vẽ, export, xem export của peer                 |
+| `RUBRIC.md`                | Người chấm nhìn gì, ở file nào                                                      |
+| `build/`, `handoff/`       | Tool sinh ra (ảnh gom theo split, gói blind). Git bỏ qua hai thư mục này            |
 
 ## Lịch 240 phút
 
-| Phút | Pha | Output | Gate |
-|---|---|---|---|
-| 0–15 | Briefing + topic lock | `00_team.md`, problem family, cặp peer | |
-| 15–35 | Research + downstream contract | `01_problem_statement.md` | **G1** topic lock |
-| 35–80 | Guideline v1 + ontology | `02_guideline.md` v1, `03_ontology_and_cvat_setup.md`, kế hoạch edge case | |
-| 80–110 | CVAT setup + sample pack | `03_cvat_labels.json`, `sample_pack.csv`, task calibration mở được | **G2** CVAT ready |
-| 110–120 | Nghỉ | | |
-| 120–140 | Calibration nội bộ | exports, `06_calibration_measure.csv`, `06_calibration_report.csv` | |
-| 140–160 | Refine + QA plan + freeze | guideline v2, `05_qa_plan.md`, `gold_decisions.csv`, `make freeze` | **G3** calibration · **G4** gold frozen |
-| 160–185 | Blind handoff test (song song hai chiều) | gói blind gửi đi, bài peer nhận về, clarification log | **G5** handoff complete |
-| 185–205 | Score + diagnose | `transfer_score.csv`, `make gts`, phân tích nguyên nhân | |
-| 205–225 | Final revision | guideline v3, `08_revision_log.md`, edge case ≥ 8 | |
-| 225–240 | Nộp + debrief theo cặp | `make check`, push, 2 phút owner/peer mỗi chiều | **G6** final handoff |
+| Phút    | Pha                                      | Output                                                                    | Gate                                    |
+| ------- | ---------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------- |
+| 0–15    | Briefing + topic lock                    | `00_team.md`, problem family, cặp peer                                    |                                         |
+| 15–35   | Research + downstream contract           | `01_problem_statement.md`                                                 | **G1** topic lock                       |
+| 35–80   | Guideline v1 + ontology                  | `02_guideline.md` v1, `03_ontology_and_cvat_setup.md`, kế hoạch edge case |                                         |
+| 80–110  | CVAT setup + sample pack                 | `03_cvat_labels.json`, `sample_pack.csv`, task calibration mở được        | **G2** CVAT ready                       |
+| 110–120 | Nghỉ                                     |                                                                           |                                         |
+| 120–140 | Calibration nội bộ                       | exports, `06_calibration_measure.csv`, `06_calibration_report.csv`        |                                         |
+| 140–160 | Refine + QA plan + freeze                | guideline v2, `05_qa_plan.md`, `gold_decisions.csv`, `make freeze`        | **G3** calibration · **G4** gold frozen |
+| 160–185 | Blind handoff test (song song hai chiều) | gói blind gửi đi, bài peer nhận về, clarification log                     | **G5** handoff complete                 |
+| 185–205 | Score + diagnose                         | `transfer_score.csv`, `make gts`, phân tích nguyên nhân                   |                                         |
+| 205–225 | Final revision                           | guideline v3, `08_revision_log.md`, edge case ≥ 8                         |                                         |
+| 225–240 | Nộp + debrief theo cặp                   | `make check`, push, 2 phút owner/peer mỗi chiều                           | **G6** final handoff                    |
 
 Lab Coach đi vòng theo mốc gate và chỉ check **quy trình**, không check "đáp án". `make status` cho biết gate nào xong
 và việc đầu tiên còn thiếu.
@@ -91,24 +91,24 @@ và việc đầu tiên còn thiếu.
 
 Từ "label road elements" thành một production problem đủ hẹp để làm sâu:
 
-| Quá rộng | Đủ cụ thể |
-|---|---|
+| Quá rộng               | Đủ cụ thể                                                     |
+| ---------------------- | ------------------------------------------------------------- |
 | "Label traffic lights" | Traffic-light state + ego relevance tại giao lộ nhiều đầu đèn |
-| "Label lane" | Lane boundary tại merge/split + vạch mờ/tạm thời |
-| "Road segmentation" | Drivable area ở vỉa hè / bãi đỗ / lề đường dễ nhầm |
-| "Label traffic signs" | Hierarchical sign taxonomy cho biển nhỏ / xa / bị che |
+| "Label lane"           | Lane boundary tại merge/split + vạch mờ/tạm thời              |
+| "Road segmentation"    | Drivable area ở vỉa hè / bãi đỗ / lề đường dễ nhầm            |
+| "Label traffic signs"  | Hierarchical sign taxonomy cho biển nhỏ / xa / bị che         |
 
 Topic menu chỉ là điểm xuất phát. Chỉ dùng ảnh trong `data/` (license đã kiểm cho lớp học):
 
-| Problem family | Ảnh phù hợp trong `data/` | Lưu ý dữ liệu |
-|---|---|---|
-| Lane geometry / semantics | `bdd100k` | 26 ảnh, chủ yếu highway và city street ban ngày |
-| Drivable area | `bdd100k` | cùng 26 ảnh |
+| Problem family                              | Ảnh phù hợp trong `data/`                                 | Lưu ý dữ liệu                                                                  |
+| ------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Lane geometry / semantics                   | `bdd100k`                                                 | 26 ảnh, chủ yếu highway và city street ban ngày                                |
+| Drivable area                               | `bdd100k`                                                 | cùng 26 ảnh                                                                    |
 | Traffic light (state, relevance, direction) | `bdd100k` (12 ảnh có đèn, gồm đêm và chạng vạng) + `lisa` | LISA chỉ là **một** clip 30 frame — blind nên lấy ảnh BDD để là cảnh chưa thấy |
-| Traffic sign taxonomy | `gtsdb` + `bdd100k` (23 ảnh có biển) | GTSDB là biển Đức; có ảnh không có biển để làm negative |
-| Low visibility | `bdd100k` (2 đêm, 2 chạng vạng, 2 tuyết, 1 mưa) | ít ảnh — ghép ảnh ban ngày làm case normal |
-| Temporal road elements | `lisa` | 30 frame liên tiếp; khó tạo blind "unseen", ghi rõ giới hạn |
-| Construction zone | chưa kiểm có đủ ảnh | chỉ chọn nếu tìm được đủ ≥ 12 ảnh trong `data/` |
+| Traffic sign taxonomy                       | `gtsdb` + `bdd100k` (23 ảnh có biển)                      | GTSDB là biển Đức; có ảnh không có biển để làm negative                        |
+| Low visibility                              | `bdd100k` (2 đêm, 2 chạng vạng, 2 tuyết, 1 mưa)           | ít ảnh — ghép ảnh ban ngày làm case normal                                     |
+| Temporal road elements                      | `lisa`                                                    | 30 frame liên tiếp; khó tạo blind "unseen", ghi rõ giới hạn                    |
+| Construction zone                           | chưa kiểm có đủ ảnh                                       | chỉ chọn nếu tìm được đủ ≥ 12 ảnh trong `data/`                                |
 
 `make samples SOURCE=bdd100k` in thời tiết, giờ, cảnh của từng ảnh BDD; mở thư mục `data/…` để xem ảnh.
 
@@ -139,16 +139,17 @@ Khi xong bản nháp đầu, đổi dòng `Version` trong `02_guideline.md` thà
    [GUIDE mục 2](GUIDE.md#2-tạo-task-calibration).
 2. Chia ảnh vào `sample_pack.csv`, mỗi dòng một ảnh:
 
-   | Cột | Giá trị |
-   |---|---|
-   | `sample_id` | như trong `data/catalog.csv`, ví dụ `BDD07` |
-   | `split` | `example` (3–5 ảnh, dùng làm ví dụ trong guideline) · `calibration` (5–8 ảnh) · `blind` (4–5 ảnh chưa ai trong nhóm peer thấy) |
-   | `tags` | một hoặc nhiều giá trị, cách nhau bằng `;`: `normal`, `edge`, `critical`, `ambiguity`, `negative`, `occlusion`, `small_far`, `low_visibility`, `temporal`, `conflict` |
-   | `reason` | vì sao chọn ảnh này, nó thử rule nào |
+   | Cột         | Giá trị                                                                                                                                                               |
+   | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | `sample_id` | như trong `data/catalog.csv`, ví dụ `BDD07`                                                                                                                           |
+   | `split`     | `example` (3–5 ảnh, dùng làm ví dụ trong guideline) · `calibration` (5–8 ảnh) · `blind` (4–5 ảnh chưa ai trong nhóm peer thấy)                                        |
+   | `tags`      | một hoặc nhiều giá trị, cách nhau bằng `;`: `normal`, `edge`, `critical`, `ambiguity`, `negative`, `occlusion`, `small_far`, `low_visibility`, `temporal`, `conflict` |
+   | `reason`    | vì sao chọn ảnh này, nó thử rule nào                                                                                                                                  |
 
    Blind set phải có ít nhất **1 `normal` + 2 `edge` + 1 `critical`**, và **1 `ambiguity`** nếu dùng 5 ảnh. Một ảnh
    chỉ thuộc một split. Rule có thể giống, nhưng cảnh blind phải chưa xuất hiện trong example/calibration (LISA: tool
    cảnh báo frame blind nằm sát frame đã dùng).
+
 3. `make pack SPLIT=calibration` gom ảnh calibration vào `build/calibration/`. Tạo task CVAT từ thư mục đó, dán
    `03_cvat_labels.json` vào tab **Raw**, dán `02_guideline.md` vào **Guide** của task
    ([GUIDE mục 2](GUIDE.md#2-tạo-task-calibration)).
@@ -166,13 +167,13 @@ Khi xong bản nháp đầu, đổi dòng `Version` trong `02_guideline.md` thà
    cột `agree`. Lệnh in top chỗ lệch nhiều nhất. Nó chỉ đo **bất đồng**, không nói ai đúng.
 4. Chọn ít nhất 3 bất đồng lớn nhất, ghi vào `06_calibration_report.csv`:
 
-   | Cột | Giá trị |
-   |---|---|
-   | `sample_id`, `item` | ảnh nào, object/attribute nào |
-   | `values_by_annotator` | mỗi người làm gì, ví dụ `an=relevant; binh=not_relevant` |
-   | `diagnosis` | `guideline_gap` (rule thiếu/mơ hồ) · `data_ambiguity` (ảnh không đủ bằng chứng) · `execution_error` (rule rõ, người làm sai) |
-   | `action` | `revise_rule`, `add_example`, `add_escalation`, `coaching`, `no_change` |
-   | `rule_change` | rule đổi thế nào và vì sao. Mục tiêu 3 rule change; dòng `execution_error` + `coaching` để trống được (`make status` chỉ chặn khi không dòng nào có) |
+   | Cột                   | Giá trị                                                                                                                                              |
+   | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | `sample_id`, `item`   | ảnh nào, object/attribute nào                                                                                                                        |
+   | `values_by_annotator` | mỗi người làm gì, ví dụ `an=relevant; binh=not_relevant`                                                                                             |
+   | `diagnosis`           | `guideline_gap` (rule thiếu/mơ hồ) · `data_ambiguity` (ảnh không đủ bằng chứng) · `execution_error` (rule rõ, người làm sai)                         |
+   | `action`              | `revise_rule`, `add_example`, `add_escalation`, `coaching`, `no_change`                                                                              |
+   | `rule_change`         | rule đổi thế nào và vì sao. Mục tiêu 3 rule change; dòng `execution_error` + `coaching` để trống được (`make status` chỉ chặn khi không dòng nào có) |
 
 Đừng mặc định lỗi nằm ở annotator, và đừng "ép consensus" bằng miệng — biến bất đồng thành rule, exception, escalation
 hoặc ví dụ. Không cần mọi người thống nhất 100%. Sửa guideline, đổi `Version` thành `v2`, ghi dòng v2 vào

@@ -10,6 +10,8 @@ BDD08,calibration,ambiguity,
 BDD09,calibration,normal,
 BDD24,calibration,conflict,
 BDD26,calibration,low_visibility,
-BDD18,blind ,normal,
-BDD21,blind ,normal,
+BDD18,blind,normal,
+BDD21,blind,critical,
+BDD22,blind,ambiguity
+BDD19,blind,edge
 
