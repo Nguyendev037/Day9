@@ -1,7 +1,7 @@
 sample_id,split,tags,reason
-BDD01,example,normal,Minh hoa vung road ro rang
-BDD02,example,normal,Minh hoa vung road ro rang
-BDD03,example,normal,Minh hoa vung road ro rang
+BDD01,example,normal,
+BDD02,example,normal,
+BDD03,example,normal,
 BDD04,calibration,normal,
 BDD05,calibration,normal,
 BDD06,calibration,normal,
@@ -10,5 +10,6 @@ BDD08,calibration,ambiguity,
 BDD09,calibration,normal,
 BDD24,calibration,conflict,
 BDD26,calibration,low_visibility,
-BDD18,blind,normal,
-BDD21,blind,normal,
+BDD18,blind ,normal,
+BDD21,blind ,normal,
+
