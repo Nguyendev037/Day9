@@ -15,151 +15,152 @@ File này là kho nội bộ của nhóm, **không gửi cho peer**. Card dùng 
 ---
 
 **Mapping CVAT <-> Guideline:**
-Trong CVAT, class được gọi là `road`. Trong guideline, semantic là `drivable_area`.
-Tất cả các case dưới đây dùng semantic `drivable_area`, nhưng khi implement trong CVAT, dùng class `road`.
+
+- CVAT class: `road` (semantic: `drivable_area`).
+- BDD100K attribute: `area_type` (`direct` | `alternative`).
+- Phân định rõ ràng: `direct` (làn xe ego đang chạy) và `alternative` (làn cùng chiều hợp lệ kế cận/chuyển làn được).
+- Không tự suy đoán phần bị che khuất hoàn toàn (visible-only).
 
 ---
 
-CASE ID: EC01<br>
-Sample: BDD05<br>
-Scene: Đường cao tốc có làn xe đang lưu thông và một vùng mặt đường lớn được kẻ các vạch chéo ở bên phải roadway.<br>
-Observation: Vùng kẻ chéo có cùng bề mặt asphalt với roadway và nằm sát làn xe nên có thể khiến annotator coi toàn bộ phần asphalt là drivable area. Tuy nhiên vùng này đóng vai trò là vùng phân tách/gore và không phải phần drivable area dành cho xe di chuyển bình thường.<br>
-Decision: IGNORE<br>
-Expected: `drivable_area` polygon (CVAT: class `road`) chỉ bao phủ phần drivable area dành cho xe di chuyển bình thường; vùng gore/hatched được loại khỏi polygon.<br>
-Rationale: Downstream cần phân biệt không gian thực sự dành cho xe di chuyển với phần asphalt dùng để phân tách dòng xe. Gán vùng gore thành drivable area sẽ làm mở rộng sai vùng không gian xe có thể sử dụng.<br>
-Common mistake: Gán toàn bộ vùng asphalt vào `drivable_area` (CVAT: `road`) hoặc tạo polygon bao phủ cả vùng gạch chéo.<br>
-Diversity: ambiguity / conflict / critical<br>
+CASE ID: EC01
+Sample: BDD05
+Scene: Đường cao tốc ngoại ô ban ngày, phía bên phải có vùng nhập/tách làn với đảo tam giác sơn vạch xương cá/vạch chéo màu trắng (gore/chevron area), tiếp giáp với hàng rào và công trình thép.
+Observation: Vùng vạch chéo có cùng cốt cao độ và cùng chất liệu bê tông nhựa với mặt đường chính. Annotator rất dễ nhầm lẫn coi toàn bộ thảm nhựa là drivable area và vẽ polygon trùm qua cả vùng vạch chéo.
+Decision: IGNORE
+Expected: Polygon `drivable_area` (CVAT: `road`, `area_type=direct`) chỉ bao phủ làn đường xe đang chạy; vùng vạch chéo phân dòng (gore area) và dải phân cách mềm bên phải bị loại bỏ hoàn toàn (IGNORE).
+Rationale: Theo luật giao thông và chuẩn BDD100K, vùng gạch chéo là vùng đệm an toàn cấm xe đè vạch/lưu thông. Gán vùng này là drivable area sẽ khiến bộ lập quỹ đạo điều khiển xe đâm vào vùng xung đột tách/nhập làn.
+Common mistake: Vẽ một polygon duy nhất bao trùm cả làn đường và toàn bộ vùng vạch gạch chéo bên phải.
+Diversity: conflict / critical / ambiguous semantics
 
 ---
 
 CASE ID: EC02
-Sample: BDD03
-Scene: Đường cao tốc nhiều làn, có một phần paved shoulder nằm ngoài làn xe và được phân cách bởi đường biên màu vàng.
-Observation: Shoulder có cùng màu và vật liệu với drivable area nên có thể bị nhầm. Ranh giới active drivable area và shoulder thể hiện bằng cấu trúc làn đường và đường biên.
+Sample: BDD14
+Scene: Đường cao tốc nhiều làn ban ngày, lưu lượng xe đông đúc; phía bên phải ngoài vạch sơn liền màu trắng là phần lề đường trải nhựa (paved shoulder) rất rộng tiếp tiếp giáp taluy cỏ.
+Observation: Paved shoulder có bề mặt nhựa đường tương đồng với làn xe chính. Do không có gờ bê tông ngăn cách, người gán nhãn dễ nhầm shoulder là một làn xe bổ sung (`alternative`).
 Decision: IGNORE
-Expected: `drivable_area` polygon (CVAT: class `road`) chỉ bao phủ các làn drivable area dành cho xe di chuyển; paved shoulder nằm ngoài drivable area được loại.
-Rationale: Nếu label cả shoulder, diện tích drivable area bị mở rộng sang vùng ngoài active roadway và làm sai không gian chuyển động của xe.
-Common mistake: Gán toàn bộ mặt asphalt từ mép đường đến barrier thành một polygon duy nhất.
+Expected: Polygon `road` (`area_type=direct`) bao phủ làn xe ego đang chạy; các làn bên trái gán `area_type=alternative`. Phần paved shoulder ngoài vạch liền trắng bên phải bị LOẠI BỎ (IGNORE).
+Rationale: Lề đường khẩn cấp không phục vụ lưu thông xe bình thường. Bao gồm cả shoulder sẽ làm sai lệch không gian di chuyển hợp pháp của hệ thống tự hành.
+Common mistake: Kéo polygon vượt qua vạch sơn liền trắng sang tận chân taluy cỏ bên phải.
 Diversity: ambiguity / conflict
 
 ---
 
 CASE ID: EC03
 Sample: BDD10
-Scene: Đường phố đô thị có nhiều xe đỗ sát hai bên đường và có các vùng sát curb dễ bị nhầm giữa drivable area và khu vực parking.
-Observation: Khu vực đỗ xe nằm sát phần drivable area và có thể cùng bề mặt asphalt. Chỉ nhìn vào việc xe có thể physically đi vào khu vực đó là không đủ để kết luận đó là drivable area.
+Scene: Tuyến phố đô thị 2 chiều với vạch tim đường màu vàng đứt đoạn; hai bên lề đường có vạch sơn trắng phân định dải đỗ xe (parking bay) với nhiều ô tô đang đỗ sát curb.
+Observation: Khu vực đỗ xe cùng bề mặt asphalt với lòng đường lưu thông. Khoảng trống giữa các xe đỗ hoặc phía sau đuôi xe có thể khiến annotator phân vân có nên khoét vào sát mép vỉa hè hay không.
 Decision: IGNORE
-Expected: `drivable_area` polygon (CVAT: class `road`) bao phủ phần drivable area dành cho xe di chuyển; vùng chỉ dành cho đỗ xe được loại khỏi polygon.
-Rationale: Downstream cần vùng drivable area thực sự phục vụ xe di chuyển bình thường, không phải mọi vùng mà xe có thể dừng hoặc đỗ.
-Common mistake: Gán cả phần parking sát curb vào `drivable_area` (CVAT: `road`) chỉ vì xe có thể đi vào đó.
+Expected: `drivable_area` (CVAT: `road`, `area_type=direct`) giới hạn chuẩn xác bên trong vạch sơn trắng phân định làn xe chạy và vạch vàng tim đường; toàn bộ dải đỗ xe và các xe đỗ hai bên bị loại khỏi polygon. Làn đối diện bên trái vạch vàng không gán alternative (IGNORE).
+Rationale: Downstream perception cần không gian hành lang giao thông thực tế. Việc mở rộng polygon vào các hốc đỗ xe sát vỉa hè gây nguy cơ xe tự hành lách sai làn và va chạm với xe đang đỗ.
+Common mistake: Kéo polygon lượn lách vào các khoảng trống giữa các xe đỗ sát vỉa hè.
 Diversity: ambiguity / conflict / critical
 
 ---
 
 CASE ID: EC04
 Sample: BDD02
-Scene: Giao lộ đô thị có nhiều vạch crosswalk màu trắng phủ ngang mặt đường.
-Observation: Các vạch crosswalk tạo thành các vùng sáng rõ trên mặt đường và có thể khiến annotator hiểu nhầm rằng các phần này không còn là drivable area.
+Scene: Giao lộ đô thị lớn ban ngày, xe taxi vàng phía trước, mặt đường có cụm vạch đi bộ qua đường (crosswalk) màu trắng cỡ lớn nằm trước vạch dừng chờ đèn đỏ.
+Observation: Các vạch kẻ crosswalk song song tạo các mảng tương phản trắng - đen xen kẽ, có thể khiến annotator nhầm lẫn cắt vụn polygon hoặc coi vạch sơn là vật cản không thể lái xe qua.
 Decision: LABEL
-Expected: Tạo `drivable_area` polygon (CVAT: class `road`) liên tục trên phần drivable area và đi qua vùng crosswalk; không tạo lỗ theo các vạch crosswalk.
-Rationale: Crosswalk là marking nằm trên drivable area. Việc loại crosswalk khỏi polygon sẽ làm sai hình học của mặt đường.
-Common mistake: Cắt từng dải crosswalk ra khỏi polygon hoặc chia drivable area thành nhiều polygon chỉ vì có các vạch trắng.
-Diversity: ambiguity / conflict
+Expected: Tạo polygon `road` (`area_type=direct` cho làn ego và `area_type=alternative` cho các làn cùng chiều kề bên) phủ liên tục xuyên suốt qua vạch dừng và toàn bộ cụm vạch kẻ crosswalk; cắt vòng quanh đuôi xe taxi vàng theo nguyên tắc visible-only.
+Rationale: Vạch kẻ crosswalk là tín hiệu giao thông trên mặt đường, toàn bộ bề mặt này hoàn toàn cho phép xe lăn bánh qua.
+Common mistake: Cắt đứt polygon trước crosswalk hoặc khoét lỗ rỗng theo các nan vạch kẻ vôi trắng.
+Diversity: conflict / visible-only
 
 ---
 
 CASE ID: EC05
 Sample: BDD13
-Scene: Đường đô thị có nhiều phương tiện ở phía trước, trong đó xe tải và xe bán tải che khuất một phần mặt đường.
-Observation: Một phần drivable area nằm phía sau hoặc giữa các phương tiện không nhìn thấy rõ. Annotator có thể có xu hướng kéo polygon qua vùng bị che dựa trên suy đoán về phần đường tiếp tục phía sau xe.
+Scene: Đường đô thị một chiều nhiều làn, phía trước có xe bán tải trắng (pickup) và xe sedan bạc che khuất tầm nhìn, trên mặt đường có vạch sơn kẻ người đi bộ màu vàng đậm.
+Observation: Thân xe bán tải và xe con che khuất hoàn toàn một khoảng mặt đường lớn ngay phía trước mũi xe ego. Annotator thường có xu hướng vẽ phỏng đoán phần đường tiếp nối phía trước mũi xe tải.
 Decision: LABEL
-Expected: Chỉ annotate phần `drivable_area` (CVAT: class `road`) được hỗ trợ bởi geometry nhìn thấy được. Không tự suy đoán hoặc kéo polygon xuyên qua vùng bị che hoàn toàn.
-Rationale: Downstream sử dụng geometry của vùng nhìn thấy được. Suy đoán phần đường bị che có thể làm sai boundary và tạo ra annotation không có bằng chứng trực tiếp.
-Common mistake: Vẽ polygon xuyên qua xe và tái tạo toàn bộ mặt đường phía sau xe dù phần đó không nhìn thấy.
-Diversity: occlusion
+Expected: Gán nhãn `area_type=direct` cho làn hiện tại và `area_type=alternative` cho làn bên cạnh; ranh giới polygon phải bo sát mép lốp và gầm xe nhìn thấy được (visible boundary). Tuyệt đối KHÔNG vẽ đè xuyên qua thân xe hoặc phỏng đoán vùng khuất. Vạch vàng crosswalk được phủ kín bình thường.
+Rationale: Chuẩn annotation thị giác máy tính chỉ học trên điểm ảnh nhìn thấy (visible pixels). Phỏng đoán hình học che khuất sẽ làm sai lệch ground truth của mô hình phân đoạn.
+Common mistake: Kéo polygon xuyên qua gầm và thân xe bán tải để nối liền dải đường phía xa.
+Diversity: occlusion / truncation
 
 ---
 
 CASE ID: EC06
 Sample: BDD22
-Scene: Đường cao tốc rộng, các làn đường tiến dần về phía điểm biến mất ở xa và phần drivable area ở xa có kích thước rất nhỏ trong ảnh.
-Observation: Drivable area ở xa vẫn có thể nhận diện được nhưng rất hẹp về mặt pixel. Annotator có thể bỏ qua hoặc vẽ lệch đáng kể vì khó đặt các điểm polygon.
+Scene: Đường cao tốc ngoại ô lúc hoàng hôn, đường thẳng tắp và thu hẹp dần về phía điểm tụ (vanishing point) ở chân trời xa xôi, có biển báo chỉ dẫn màu xanh bên phải.
+Observation: Càng về xa, làn đường càng thu hẹp chỉ còn vài pixel bề rộng. Annotator dễ nản hoặc tự ý dừng polygon ở cự ly trung bình do khó đặt điểm chính xác.
 Decision: LABEL
-Expected: Vẫn annotate phần drivable area (CVAT: class `road`) nhìn thấy được ở xa nếu boundary còn đủ rõ; polygon phải tiếp tục theo drivable area đến vùng có thể quan sát được.
-Rationale: Downstream cần duy trì đầy đủ vùng drivable area nhìn thấy được, kể cả khi vùng đó nhỏ do phối cảnh.
-Common mistake: Bỏ hoàn toàn phần drivable area ở xa hoặc tự mở rộng polygon vì cho rằng vùng nhỏ không cần annotate.
-Diversity: small_far
+Expected: Tạo polygon `area_type=direct` (làn giữa/phải xe đang đi) và `area_type=alternative` bám theo các vạch sơn đứt đoạn, kéo dài liên tục về phía trước đến điểm tụ xa nhất mà mắt thường còn phân biệt được ranh giới mặt đường.
+Rationale: Hệ thống tự hành cần nhận diện tầm xa (long-range perception) để giữ làn trên cao tốc vận tốc lớn. Cắt cụt polygon sớm sẽ làm mô hình mất khả năng dự đoán điểm tụ.
+Common mistake: Dừng polygon đột ngột ở khoảng cách 30-50m trước xe vì cho rằng vùng xa quá hẹp.
+Diversity: small_far / long_range
 
 ---
 
 CASE ID: EC07
 Sample: BDD21
-Scene: Đường nhiều làn có guardrail chạy dọc bên phải và một vùng không gian khác nằm phía sau guardrail.
-Observation: Phần phía bên kia guardrail có thể vẫn trông giống bề mặt giao thông hoặc không gian có thể tiếp cận bằng xe, nhưng guardrail tạo ranh giới vật lý rõ ràng với drivable area đang được quan sát.
+Scene: Đường đô thị nhiều làn có dải hộ lan tôn sóng (guardrail) chạy dài bên phải ngăn cách với hành lang cây xanh và hàng rào lưới thép bên ngoài; phía trước có biển báo rẽ gấp màu vàng.
+Observation: Phần hành lang phía sau guardrail có cốt nền bê tông/gạch trông bằng phẳng và có vẻ đi lại được. Ranh giới hộ lan có chân cột và bóng đổ phức tạp.
 Decision: IGNORE
-Expected: `drivable_area` polygon (CVAT: class `road`) kết thúc tại boundary drivable area phía trong guardrail; không mở rộng sang vùng phía sau barrier nếu vùng đó không phải drivable area đang sử dụng.
-Rationale: Barrier là bằng chứng hình học mạnh cho thấy hai vùng không gian bị tách biệt. Gán cả vùng phía sau vào drivable area sẽ làm sai phạm vi drivable area.
-Common mistake: Kéo polygon qua guardrail chỉ vì vùng phía sau vẫn có bề mặt đi lại được.
-Diversity: conflict / ambiguous semantics
+Expected: Polygon `road` (`area_type=direct` cho làn đang chạy, `area_type=alternative` cho các làn bên trái) kết thúc dứt khoát tại chân đế dải hộ lan guardrail. Toàn bộ khu vực phía sau hộ lan bị LOẠI BỎ (IGNORE).
+Rationale: Hộ lan là rào cản vật lý tuyệt đối (hard physical barrier). Gán vùng phía sau vào drivable area là lỗi an toàn nghiêm trọng có thể dẫn đến va chạm chết người.
+Common mistake: Thả điểm polygon vượt qua mép trên hộ lan hoặc bao trùm cả phần hành lang kỹ thuật bên ngoài.
+Diversity: conflict / physical_barrier / critical
 
 ---
 
 CASE ID: EC08
 Sample: BDD23
-Scene: Đường khu dân cư có tuyết và các xe đỗ dọc hai bên; ranh giới giữa drivable area và vùng sát curb bị tuyết che một phần.
-Observation: Tuyết làm boundary giữa drivable area, curb và vùng đỗ xe khó xác định chính xác. Có thể xác định phần drivable area chính nhưng không chắc vị trí boundary ở một số đoạn.
+Scene: Tuyến phố khu dân cư trời âm u sau mưa tuyết, kính lái đọng giọt nước mờ ảo, tuyết bẩn tích tụ thành các mảng sát mép vỉa hè (curb), hai bên có xe đỗ ken dày.
+Observation: Nước đọng trên kính làm mờ hình ảnh; tuyết lẫn bùn đất che lấp hoàn toàn mép bó vỉa hè bê tông ở một số đoạn khiến không thể xác định ranh giới vật lý bằng mắt thường.
 Decision: ESCALATE
-Expected: Tạo `drivable_area` (CVAT: class `road`) cho phần drivable area nhìn thấy được và đặt `needs_review=true` ở polygon bị ảnh hưởng nếu uncertainty chỉ ở cục bộ. Không tự suy đoán boundary bị tuyết che.
-Rationale: Ép annotator chọn một boundary chính xác khi ảnh không cung cấp đủ bằng chứng sẽ tạo disagreement giữa các annotator. Downstream cần uncertainty được thể hiện rõ để reviewer xử lý.
-Common mistake: Tự dựng curb/drivable area boundary hoàn toàn dựa trên suy đoán về vị trí của tuyết hoặc vị trí xe đỗ.
-Diversity: ambiguity / escalation / occlusion
+Expected: Gán polygon `road` (`area_type=direct`) cho phần lòng đường nhựa ướt nhìn rõ; tại các đoạn ranh giới bị tuyết vùi lấp hoặc mép xe đỗ không chắc chắn, annotator bật thuộc tính `needs_review=true` và `state=ambiguous`.
+Rationale: Khi hình ảnh thiếu bằng chứng thị giác trực tiếp do thời tiết, annotator không được đoán mò. Việc gắn cờ escalation giúp reviewer hiệu chuẩn lại ranh giới trong khâu QA.
+Common mistake: Tự phỏng đoán vẽ đường thẳng xuyên qua các tảng tuyết bẩn sát lề đường.
+Diversity: ambiguity / escalation / weather_adverse
 
 ---
 
 CASE ID: EC09
 Sample: BDD24
-Scene: Đường phố đô thị có tuyết chất thành dải lớn ở hai bên drivable area; một số phương tiện lớn ở phía phải che một phần vùng sát curb.
-Observation: Snowbank làm drivable area hẹp lại về mặt nhìn thấy và che một phần boundary thật; đồng thời vật thể ở bên phải làm visibility giảm thêm. Annotator có thể khác nhau ở vị trí boundary giữa drivable area và vùng tuyết.
+Scene: Đại lộ đô thị hẹp giữa các tòa nhà cao tầng, tuyết được ủi dồn lại thành dải đùn cao (snowbanks) chiếm dụng lòng đường; bên phải có xe bán đồ ăn (diner cart) và người đi bộ đông đúc.
+Observation: Dải tuyết đùn làm co hẹp bề rộng làn xe di chuyển, ranh giới giữa mặt đường ướt và chân đống tuyết bị bùn lầy nhem nhuốc. Xe cộ đang xếp hàng di chuyển chậm.
 Decision: ESCALATE
-Expected: Gán `drivable_area` (CVAT: class `road`) cho phần drivable area nhìn thấy được; nếu boundary drivable area/snowbank không xác định chắc chắn ở một đoạn, đặt `needs_review=true`. Không kéo polygon vào vùng tuyết chỉ vì phỏng đoán drivable area tiếp tục ở đó.
-Rationale: Sai boundary trong case này có thể làm thay đổi đáng kể diện tích drivable area và downstream geometry.
-Common mistake: Coi toàn bộ vùng có màu tối/ướt phía trong snowbank là drivable area hoặc tự suy đoán phần đường bị tuyết che.
-Diversity: ambiguity / escalation / occlusion / critical
+Expected: Polygon `area_type=direct` chỉ vẽ bám sát bề mặt đường nhựa đen nhìn thấy; tuyệt đối KHÔNG lấn vào đống tuyết đùn. Đặt `needs_review=true` cho polygon và gắn tag ảnh `image_escalate` nếu toàn bộ làn đường bị tuyết xâm lấn không rõ tim đường.
+Rationale: Đống tuyết đóng băng là chướng ngại vật thực tế làm giảm không gian lưu thông. Gán tuyết đùn vào drivable area sẽ khiến xe tự hành lao vào đống tuyết gây kẹt hoặc lật xe.
+Common mistake: Coi đống tuyết đùn là mặt đường di chuyển được chỉ vì nó nằm dưới lòng đường.
+Diversity: ambiguity / escalation / obstacle_intrusion / critical
 
 ---
 
 CASE ID: EC10
 Sample: BDD18
-Scene: Đường phố ban đêm, nhiều xe đỗ hai bên, phần drivable area phía trước có ánh sáng yếu và boundary một số đoạn không rõ.
-Observation: Drivable area vẫn nhận diện được ở phần chính của ảnh nhưng các vùng tối ở xa có thể khiến annotator kéo polygon khác nhau.
+Scene: Tuyến phố đô thị ban đêm có đèn đường, ở giữa đường có một làn xe buýt chuyên dụng sơn phủ màu đỏ gạch nổi bật kèm chữ sơn trắng lớn; hai bên đường có hàng loạt ô tô đang đỗ.
+Observation: Làn xe buýt sơn đỏ có màu sắc tương phản dị biệt so với mặt đường nhựa xám đen xung quanh, dễ khiến người gán băn khoăn liệu đây có phải làn cấm (non-drivable) hay không.
 Decision: LABEL
-Expected: Annotate phần drivable area có đủ bằng chứng nhìn thấy; không mở rộng polygon vào vùng tối nơi boundary không được quan sát rõ. Nếu một đoạn boundary cụ thể không xác định được, dùng `needs_review=true`.
-Rationale: Bóng tối không làm drivable area trở thành non-drivable. Tuy nhiên geometry không được suy đoán ngoài bằng chứng ảnh.
-Common mistake: Kéo polygon vào toàn bộ vùng tối phía trước chỉ vì drivable area có khả năng tiếp tục ở đó.
-Diversity: low_visibility / ambiguity / escalation
+Expected: Gán nhãn polygon `road` phủ kín toàn bộ làn xe buýt sơn đỏ (`area_type=direct` nếu ego đang chạy trên đó hoặc `area_type=alternative` nếu ego ở làn bên cạnh). Không khoét lỗ hay tách vụn polygon theo chữ sơn trắng. Hàng xe đỗ hai bên bị loại bỏ.
+Rationale: Làn xe buýt (bus lane) về mặt hình học và kết cấu hoàn toàn là bề mặt lưu thông cơ giới hợp pháp (drivable roadway), màu sơn chỉ quy định quyền ưu tiên làn xe.
+Common mistake: Loại bỏ hoặc khoét rỗng phần đường sơn màu đỏ vì tưởng là khu vực cấm xe chạy.
+Diversity: ambiguity / low_visibility / lane_marking_anomaly
 
 ---
 
 CASE ID: EC11
 Sample: BDD25
-Scene: Đường phố vào lúc chạng vạng/tối, mặt đường ướt và phản xạ mạnh ánh sáng từ đèn đường, đèn xe và các biển hiệu.
-Observation: Reflection làm thay đổi màu và độ sáng của mặt đường; các vùng phản sáng có thể khiến annotator hiểu sai boundary hoặc thu nhỏ polygon.
+Scene: Đại lộ đô thị sầm uất lúc chập tối/đêm, mặt đường nhựa ướt sũng phản chiếu chói chang ánh đèn neon từ các tòa nhà, cửa hàng và đèn đuôi xe cộ.
+Observation: Hiện tượng phản quang (reflection/glare) làm mặt đường loang lổ các vệt sáng vàng, đỏ, trắng, che khuất một phần các vạch sơn phân làn bên dưới.
 Decision: LABEL
-Expected: `drivable_area` (CVAT: class `road`) phải được xác định theo cấu trúc drivable area và boundary vật lý nhìn thấy; không loại các vùng drivable area chỉ vì có reflection. Nếu reflection che mất boundary, dùng `needs_review=true`.
-Rationale: Wet road vẫn là drivable area. Downstream cần semantic drivable area boundary chứ không phải phân loại bề mặt dựa trên độ sáng hoặc màu phản xạ.
-Common mistake: Thu nhỏ polygon để tránh vùng phản sáng hoặc coi reflection là boundary mới của drivable area.
-Diversity: ambiguity / low_visibility
+Expected: Polygon `road` (`area_type=direct` cho làn xe đang di chuyển, `area_type=alternative` cho các làn kề bên) phải phủ trùm liên tục qua các vệt phản chiếu ánh sáng trên mặt đường ướt; không cắt xẻ polygon theo bóng sáng phản quang. Nếu đoạn nào vạch kẻ bị chói mất dấu, đặt `state=ambiguous`.
+Rationale: Mặt đường ướt đẫm nước vẫn là không gian di chuyển drivable area hợp chuẩn. Phản quang chỉ là hiệu ứng quang học, không phải vật cản vật lý.
+Common mistake: Cắt đục lỗ polygon để né các vệt sáng đèn phản chiếu trên mặt đường nhựa ướt.
+Diversity: low_visibility / reflection / glare
 
 ---
 
 CASE ID: EC12
 Sample: BDD04
-Scene: Đường phố khu dân cư có curb rõ, xe đỗ dọc hai bên và các khoảng không gian sát mép đường.
-Observation: Ranh giới giữa active drivable area, phần sát curb và vùng dùng cho đỗ xe nhìn khá gần nhau. Annotator có thể đặt boundary ở các vị trí khác nhau nếu chỉ nhìn vào vị trí của xe đỗ.
+Scene: Tuyến đường dốc khu dân cư ban ngày có vạch đôi màu vàng ở giữa tim đường; hai bên lề đường có nhiều xe ô tô đỗ dọc sát mép vỉa hè (curb), phía xa có xe buýt đang lên dốc.
+Observation: Ranh giới mép đường vật lý (curb) rõ ràng nhưng bị gián đoạn bởi các thân xe đỗ; vạch đôi màu vàng chia tách 2 chiều lưu thông rõ rệt.
 Decision: LABEL
-Expected: Polygon bám theo boundary vật lý của drivable area; phần parking/roadside nằm ngoài drivable area không được đưa vào polygon.
-Rationale: Đây là tình huống cần nhất quán về semantic của drivable area. Việc xe đỗ dọc đường không có nghĩa toàn bộ vùng sát xe đều là drivable area.
-Common mistake: Lấy hàng xe đỗ làm boundary chính mà không kiểm tra curb và cấu trúc drivable area.
-Diversity: ambiguity / conflict
-
----
+Expected: Polygon `road` với `area_type=direct` phủ trọn vẹn làn đường bên phải vạch đôi vàng cho đến mép bánh xe đỗ hoặc curb hở; làn ngược chiều bên trái vạch đôi vàng KHÔNG gán alternative (loại bỏ hoặc gán opposite nếu có schema, ở chuẩn 2 nhãn thì IGNORE làn ngược chiều có vạch đôi liền).
+Rationale: Vạch đôi vàng liền là vạch cấm lấn làn theo luật giao thông. Xe tự hành không thể coi làn đối diện là làn chuyển đổi hợp pháp (`alternative`).
+Common mistake: Gán trùm toàn bộ mặt đường cả 2 chiều xe chạy thành một polygon duy nhất hoặc gán làn ngược chiều là `alternative`.
+Diversity: conflict / lane_boundary / traffic_rule

@@ -1,15 +1,13 @@
-sample_id,decision_id,expected,severity,rationale,
-BDD18,d1,class=drivable_area (CVAT: road); LABEL visible areas only; needs_review=true for dark regions,major,Đường đêm: chỉ label vùng nhìn thấy, dùng needs_review cho vùng tối
-BDD18,d2,geometry: polygon ôm toàn bộ làn nhìn thấy; tolerance 2px mỗi cạnh,minor,theo mục 3 geometry rule,
-BDD18,d3,class=drivable_area (CVAT: road); IGNORE sidewalk and curb,critical,Vỉa hè và mép vỉa hè không phải drivable area,
-BDD18,d4,attribute:needs_review=true for occluded boundary,major,Vùng biên bị xe che, đánh dấu needs_review
-BDD21,d1,class=drivable_area (CVAT: road); IGNORE area behind guardrail,critical,Guardrail là ranh giới, vùng phía sau không phải drivable area nếu không có bằng chứng
-BDD21,d2,class=drivable_area (CVAT: road); LABEL continuous road through intersection,major,Giao lộ vẫn là drivable area liên tục,
-BDD21,d3,geometry: do not extend polygon beyond visible boundary,minor,Không mở rộng polygon ra ngoài vùng nhìn thấy,
-BDD22,d1,class=drivable_area (CVAT: road); IGNORE reflection on wet surface,critical,Reflection trên mặt đường ướt không phải drivable area thật,
-BDD22,d2,class=drivable_area (CVAT: road); LABEL all visible lanes,major,BDD22 có nhiều làn, label hết vùng drivable
-BDD19,d1,class=drivable_area (CVAT: road); count=2; separate lanes at merge point,major,BDD19 có merge point, tách thành 2 polygon riêng biệt
-BDD19,d2,attribute:state=clear for all visible drivable_area,minor,Không có ambiguity ở BDD19,
-BDD19,d3,geometry: polygon must follow lane markings at merge,minor,At merge point, polygon theo vạch kẻ làn
-BDD14,d1,class=drivable_area (CVAT: road); LABEL entire road surface; count=1,major,BDD14 đường thẳng rõ ràng, 1 vùng drivable area liên tục
-BDD14,d2,attribute:state=clear; needs_review=false,minor,BDD14 không có occlusion hay ambiguity
+case_id,sample_id,class,attribute_area_type,decision,state,needs_review,image_escalate,severity,rationale
+EC01,BDD05,road,direct,IGNORE,clear,false,false,critical,Vung vach cheo gore area phan tach dong xe ben phai cao toc khong phai drivable area
+EC02,BDD14,road,direct,IGNORE,clear,false,false,major,Paved shoulder ben phai ngoai vach son lien trang khong phai active roadway hop le
+EC03,BDD10,road,direct,IGNORE,clear,false,false,critical,Dai do xe parking bay va cac o to do sat mep curb bi loai khoi drivable area
+EC04,BDD02,road,direct,LABEL,clear,false,false,major,Gan nhan lien tuc phu qua toan bo cum vach crosswalk tai nga tu
+EC05,BDD13,road,direct,LABEL,clear,false,false,major,Chi gan nhan mat duong nhin thay bo sat vo xe tai va pickup khong suy doan vung khuat
+EC06,BDD22,road,direct,LABEL,clear,false,false,minor,Keo dai polygon den diem tu xa nhat co the quan sat tren cao toc
+EC07,BDD21,road,direct,IGNORE,clear,false,false,critical,Dung ranh gioi tai chan ho lan guardrail loai bo hoan toan hanh lang ben ngoai rao
+EC08,BDD23,road,direct,ESCALATE,ambiguous,true,false,major,Tuyet ban va nuoc dong che lap mep duong curb gay mo ranh gioi can review
+EC09,BDD24,road,direct,ESCALATE,ambiguous,true,true,critical,Dong tuyet dun snowbank co hep long duong can escalate va can than ranh gioi
+EC10,BDD18,road,direct,LABEL,clear,false,false,major,Gan nhan phu kin ca lan xe buyt son do trong dieu kien duong pho ban dem
+EC11,BDD25,road,direct,LABEL,ambiguous,false,false,minor,Phu lien tuc qua cac vet phan chieu anh den neon mat duong uot khong duc lo
+EC12,BDD04,road,direct,LABEL,clear,false,false,critical,Chi gan nhan lan cung chieu ben phai vach doi vang khong gan alternative cho lan nguoc chieu

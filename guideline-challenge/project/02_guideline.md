@@ -3,109 +3,119 @@
 **Version:** v2
 
 <!--
+v0 = chưa có bản nháp. Đổi dòng Version ở trên thành v1 khi xong bản nháp đầu, v2 sau calibration, v3 sau blind handoff; mỗi lần tăng version ghi một dòng vào 08_revision_log.md. `make freeze` đòi v2 trở lên.
+
+File này là thứ nhóm peer nhận nguyên văn trong blind pack và là Guide dán vào CVAT. Peer KHÔNG nhận edge_case_cards.md, gold_decisions.csv hay sample_pack.csv. Rule nào peer cần biết phải nằm ở đây.
+No hidden rules: rule chỉ giải thích bằng miệng thì coi như không tồn tại.
+
 IMPORTANT MAPPING:
-- CVAT class name: `area/driveable`
+- CVAT class name: `road`
 - Guideline semantic: `drivable_area`
-- Mandatory Attribute: `area_type` phân tách giữa `direct` và `alternative`.
-- Peer annotator bắt buộc chọn thuộc tính `area_type` cho từng polygon vẽ ra.
+- BDD100K Standard Core Attributes:
+  + `area_type = direct | alternative`
+  + `state = clear | ambiguous`
+  + `needs_review = false | true`
 -->
 
 ## 1. Objective + scope
 
-Hướng dẫn gán nhãn phân đoạn **drivable area** theo chuẩn bộ dữ liệu **BDD100K** trên ảnh thị giác máy tính xe tự hành. Nhiệm vụ chính là phân định ranh giới không gian di chuyển thành 2 loại làn đường:
+Label **drivable area** (vùng mặt đường có thể lái xe) trên ảnh bộ dữ liệu **BDD100K** phục vụ **hệ thống nhận thức xe tự hành (Autonomous Vehicle Perception System)**.
 
-- **`direct` (Làn điều khiển trực tiếp):** Làn đường mà xe tự chủ (ego-vehicle) đang vận hành bên trong.
-- **`alternative` (Làn đường thay thế):** Các làn đường cùng chiều khác mà xe có thể chuyển làn sang hợp pháp.
-- **Ngoài scope (IGNORE):** Vỉa hè, lề cỏ, dải phân cách, vạch mắt võng cấm đi, vùng đỗ xe chuyên dụng, vật thể che khuất hoàn toàn.
+- **Trong scope (bắt buộc label):** Làn đường xe ego đang vận hành (`direct`) và các làn đường hợp pháp cùng chiều có thể chuyển sang (`alternative`), bao gồm mặt đường tại ngã tư, vạch kẻ crosswalk, làn xe buýt chuyên dụng và mặt đường nhìn thấy quanh xe đỗ.
+- **Ngoài scope (IGNORE):** Vỉa hè, lối đi bộ, dải phân cách, rào hộ lan (guardrail), lề đường (paved shoulder) ngoài vạch sơn liền, vùng vạch kẻ chéo phân tách dòng xe (gore/chevron area), vùng đỗ xe chuyên dụng, đất cát/thảm cỏ và các vật thể che khuất hoàn toàn.
 
 ---
 
 ## 2. Annotation unit & Taxonomy
 
 - **Đơn vị:** Từng ảnh (Image-level).
-- **Object type:** Region (Polygon).
-- **Instance rule:**
-  - Vùng `direct` thường là 1 dải polygon liên tục dọc theo tầm nhìn của làn xe hiện tại.
-  - Vùng `alternative` được vẽ riêng biệt cho từng làn kề bên hoặc gộp các dải liên tục cùng loại (ngăn cách bởi vạch phân làn).
+- **Object type:** Region (Polygon khép kín).
+- **Instance rule:** Mỗi làn đường hoặc khu vực mặt đường độc lập là 1 polygon riêng biệt:
+  - Làn xe ego đang chạy gán `area_type=direct`.
+  - Làn cùng chiều kế bên gán `area_type=alternative`.
+- **CVAT Class:** Dùng class **`road`** (tương đương với semantic `drivable_area`).
 
-### Bảng Taxonomy chi tiết
+### Bảng Taxonomy chuẩn
 
-| Name | Type | Allowed Values | Default | Bắt buộc | Rationale & Ý nghĩa |
-| :----------------- | :-------- | :------------------------------ | :------- | :------- | :---------------------------------------------------------------------------------------------------------------------------- |
-| **`area/driveable`** | Class | _Mapped to `drivable_area`_ | - | Có | Lớp đối tượng tổng cho mặt đường di chuyển. |
-| **`area_type`** | Attribute | **`direct`**, **`alternative`** | `direct` | **Có** | **Cốt lõi BDD100K:**<br>• `direct`: Làn ego car đang chạy.<br>• `alternative`: Làn kề cận cùng chiều được phép đi/chuyển vào. |
-| **`state`** | Attribute | **`clear`**, **`ambiguous`** | `clear` | Có | Độ rõ ràng của vạch kẻ và ranh giới mép đường. |
-| **`needs_review`** | Attribute | **`false`**, **`true`** | `false` | Có | Đánh dấu khi nghi ngờ ranh giới do bị che/mất vạch kẻ. |
+| Name               | Type      | Allowed Values                  | Default  | Bắt buộc | Rationale & Ý nghĩa                                                                                                                          |
+| :----------------- | :-------- | :------------------------------ | :------- | :------- | :------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`road`**         | Class     | _(Mapped: `drivable_area`)_     | -        | Có       | Lớp đối tượng duy nhất cho mặt đường di chuyển được.                                                                                         |
+| **`area_type`**    | Attribute | **`direct`**, **`alternative`** | `direct` | **Có**   | **Chuẩn BDD100K:**<br>• `direct`: Làn đường ego-car đang di chuyển trực tiếp.<br>• `alternative`: Làn cùng chiều hợp pháp có thể chuyển vào. |
+| **`state`**        | Attribute | **`clear`**, **`ambiguous`**    | `clear`  | Có       | Thể hiện mức độ rõ ràng của ranh giới làn đường.                                                                                             |
+| **`needs_review`** | Attribute | **`false`**, **`true`**         | `false`  | Có       | Đánh dấu vùng cần QA kiểm tra lại do tuyết phủ hoặc bị che khuất.                                                                            |
 
 ---
 
-## 3. Geometry Rules & Ranh giới Direct vs. Alternative
+## 3. Geometry rules & Boundary Placement
 
-1. **Vùng `direct`:**
-   - Được giới hạn bởi vạch kẻ làn bên trái và bên phải của xe ego.
-   - Bắt đầu từ phía dưới cùng của khung hình (mui xe/vị trí camera) kéo dài về phía trước điểm tụ (vanishing point).
-   - Nếu làn rẽ mở rộng ngay trên làn hiện tại, giữ nguyên nhãn `direct`.
-
-2. **Vùng `alternative`:**
-   - Làn xe bên trái hoặc bên phải cùng chiều lưu thông.
-   - Vùng nhập làn (merging lanes) hoặc tách làn (exit ramps) trước khi phân nhánh hoàn toàn.
-   - Đường tránh, làn vượt cùng chiều hợp lệ.
-
-3. **Quy tắc ranh giới hình học:**
-   - **Visible-only:** Chỉ vẽ phần mặt đường nhìn thấy. Xe cộ, người đi bộ, rào chắn cắt ngang mặt đường -> Vẽ vòng qua mép ngoài của vật cản (trừ gầm xe nhìn xuyên thấy mặt đường rõ rệt).
-   - **Độ lệch ranh giới:** Dung sai cho phép `<= 2px` so với mép vạch sơn hoặc mép gờ đường (curb).
-   - **Vạch phân cách làn:** Ranh giới giữa polygon `direct` và polygon `alternative` bám dọc theo tim vạch sơn chia làn. Không để chồng lấn (overlap) giữa 2 polygon.
+- **Shape:** Polygon khép kín.
+- **Type:** **Visible-only** (chỉ gán nhãn phần bề mặt đường thực sự nhìn thấy được qua camera; không suy đoán hoặc kéo polygon xuyên qua thân ô tô, xe tải hay vật cản).
+- **Tolerance:** Polygon phải ôm sát ranh giới vật lý hoặc mép vạch kẻ đường, sai lệch cho phép `<= 2px` mỗi cạnh.
+- **Phân tách làn (`direct` vs `alternative`):** Ranh giới giữa 2 polygon bám dọc theo tim vạch kẻ sơn chia làn; không được để hở khe trống hoặc chồng lấn (overlap) giữa các polygon.
+- **Giao lộ / Crosswalk:** Polygon kéo dài liên tục qua các cụm vạch kẻ người đi bộ (crosswalk); không khoét rỗng theo các nan vạch sơn trắng/vàng.
 
 ---
 
 ## 4. Inclusion / Exclusion Matrix
 
-| Tình huống / Đối tượng | Quyết định | Giá trị gán nhãn | Ghi chú |
-| :-------------------------------- | :--------- | :--------------------------------- | :--------------------------------------------------------------------- |
-| Làn đường xe ego đang chạy | **LABEL** | `area_type=direct` | Kéo dài tối đa đến khi tầm nhìn bị che khuất |
-| Làn kề bên cùng chiều | **LABEL** | `area_type=alternative` | Phân cách bởi vạch đứt hoặc vạch liền cho phép |
-| Ngã tư / Giao lộ mở rộng | **LABEL** | `area_type=direct` / `alternative` | Khu vực xe chuẩn bị đi thẳng là `direct`, nhánh rẽ mở là `alternative` |
-| Vạch mắt võng / Vùng đảo chevron | **IGNORE** | - | Không đi vào được theo luật |
-| Làn ngược chiều có dải phân cách | **IGNORE** | - | Không phải làn hợp lệ cho ego-vehicle |
-| Vỉa hè, thảm cỏ, rào hộ lan | **IGNORE** | - | Chướng ngại vật tĩnh ngoại vi |
-| Bãi đỗ xe bên đường (parking lot) | **IGNORE** | - | Trừ khi là làn lưu thông chính xuyên qua bãi |
-| Mặt đường có vũng nước/bóng râm | **LABEL** | Theo làn (`direct`/`alternative`) | Vẫn là mặt đường di chuyển được |
+| Tình huống / Đối tượng           | Quyết định | Thuộc tính áp dụng       | Hành vi gán nhãn                                     |
+| :------------------------------- | :--------- | :----------------------- | :--------------------------------------------------- |
+| Làn xe ego đang chạy             | **LABEL**  | `area_type=direct`       | Vẽ liên tục từ đáy ảnh hướng về điểm tụ xa nhất      |
+| Làn kề cận cùng chiều            | **LABEL**  | `area_type=alternative`  | Tách riêng polygon theo từng làn xe                  |
+| Làn xe buýt sơn đỏ               | **LABEL**  | `direct` / `alternative` | Vẽ trùm qua toàn bộ lớp sơn đỏ, không khoét chữ      |
+| Vạch crosswalk ngã tư            | **LABEL**  | Theo làn di chuyển       | Vẽ phủ kín qua vạch người đi bộ                      |
+| Mảng bê tông vá đường            | **LABEL**  | Theo làn di chuyển       | Vẽ trùm qua mảng vật liệu khác biệt                  |
+| Vệt nước / phản quang đèn        | **LABEL**  | Theo làn di chuyển       | Không cắt xẻ hay đục lỗ polygon                      |
+| Vùng vạch chéo gore/chevron      | **IGNORE** | -                        | Loại bỏ hoàn toàn khỏi polygon                       |
+| Lề đường (paved shoulder)        | **IGNORE** | -                        | Không vẽ vượt ra ngoài vạch kẻ liền màu trắng        |
+| Hộ lan (guardrail)               | **IGNORE** | -                        | Chặn ranh giới tại chân hộ lan, bỏ vùng phía sau     |
+| Dải đỗ xe (parking bay) sát curb | **IGNORE** | -                        | Chặn ranh giới tại vạch sơn phân cách hoặc mép xe đỗ |
+| Làn ngược chiều có vạch đôi vàng | **IGNORE** | -                        | Cấm lấn làn, không gán nhãn `alternative`            |
 
 ---
 
-## 5. Visibility, Occlusion & Ambiguity Handling
+## 5. Visibility, Occlusion & Escalation
 
-| Hiện trạng quan sát | Hành động | Thuộc tính áp dụng |
-| :--------------------------------------------- | :-------------------------------- | :-------------------------------------------------- |
-| Vạch kẻ rõ, tầm nhìn quang đãng | Vẽ polygon chuẩn | `state=clear`, `needs_review=false` |
-| Bị che khuất nhẹ bởi ô tô (1 - 49%) | Vẽ bao quanh phần đường thấy được | `state=clear`, `needs_review=false` |
-| Bị che khuất nặng (50 - 80%) / vạch mờ | Vẽ phần thấy được | `state=ambiguous`, `needs_review=true` |
-| Bị che khuất hoàn toàn (100%) | **Bỏ qua (IGNORE)** | Không phỏng đoán hình học |
-| Tầm nhìn cực thấp (mưa bão, ban đêm chói sáng) | Không phân định nổi làn | Gán polygon khả nghi + đặt tag **`image_escalate`** |
-
----
-
-## 6. Examples (Minh họa quyết định)
-
-| Sample ID | Tình huống | Expected Output | Ghi chú áp dụng |
-| :----------- | :------------------------------------------ | :------------------------------------------------------------------------------------------------------- | :------------------------------------------------------- |
-| **BDD_EX01** | Cao tốc ban ngày 3 làn, xe đang ở làn giữa | • 1 Polygon `area_type=direct` (làn giữa).<br>• 2 Polygon `area_type=alternative` (làn trái & làn phải). | Mục 2 & 3: Tách rõ 3 instance riêng biệt, không gộp làn. |
-| **BDD_EX02** | Đường đô thị 1 làn mỗi hướng, xe đi thẳng | • 1 Polygon `area_type=direct`.<br>• Làn đối diện bỏ qua (IGNORE) nếu có vạch đôi vàng liền. | Không gán alternative cho làn ngược chiều cấm lấn. |
-| **BDD_EX03** | Có xe tải phía trước che khuất một phần làn | • Vẽ polygon `direct` bọc sát phần bánh/gầm xe tải nhìn thấy. | Rule Visible-only (Mục 3). |
-| **BDD_EX04** | Đoạn đường đang thi công có cọc tiêu | • Phần làn bị rào chắn -> IGNORE.<br>• Phần hở còn lại xe chạy -> `direct` hoặc `alternative`. | `state=ambiguous` nếu ranh giới tạm bợ. |
+| Hiện trạng quan sát                    | Quyết định            | Attributes                                 | Image Tag                            |
+| :------------------------------------- | :-------------------- | :----------------------------------------- | :----------------------------------- |
+| Rõ ràng, vạch kẻ sắc nét               | LABEL                 | `state=clear`, `needs_review=false`        | Không                                |
+| Bị xe che khuất một phần (1-80%)       | LABEL (visible-only)  | Bo sát mép vỏ xe, gầm xe nhìn thấy         | Không                                |
+| Che khuất 100%                         | IGNORE                | Bỏ qua hoàn toàn, không phỏng đoán         | Không                                |
+| Bị tuyết phủ bẩn / nước mưa làm mờ mép | LABEL (phần thấy rõ)  | `state=ambiguous`, `needs_review=true`     | Không                                |
+| Đống tuyết đùn cao co hẹp lòng đường   | LABEL (phần nhựa đen) | `state=ambiguous`, `needs_review=true`     | `image_escalate` (nếu mất tim đường) |
+| Mất hoàn toàn ranh giới toàn ảnh       | ESCALATE              | Gán polygon khả nghi + `needs_review=true` | **`image_escalate`**                 |
 
 ---
 
-## 7. Common Mistakes & Quality Checklist
+## 6. Examples (Minh họa quyết định chuẩn)
 
-1. **Nhầm lẫn giữa `direct` và `alternative`:**
-   - _Lỗi:_ Gán toàn bộ mặt đường thành 1 polygon `direct` duy nhất.
-   - _Khắc phục:_ Phải tách biệt: Chỉ làn mà bánh xe ego-vehicle đang hướng chạy trên đó mới là `direct`. Các làn còn lại cùng chiều là `alternative`.
-2. **Vẽ đè lên chướng ngại vật:**
-   - _Lỗi:_ Kéo polygon xuyên qua thân xe khác đang dừng đèn đỏ.
-   - _Khắc phục:_ Bắt buộc cắt khoét (cut-out) chướng ngại vật theo nguyên tắc _visible-only_.
-3. **Lấn sang vỉa hè / curb:**
-   - _Lỗi:_ Thả điểm polygon quá mép bó vỉa hè > 3px.
-   - _Khắc phục:_ Zoom in 200-300% tại các góc bo cua để bo sát mép đường nhựa/bê tông.
-4. **Quên cập nhật attribute `area_type`:**
-   - _Lỗi:_ Để toàn bộ mặc định mà không kiểm tra xem làn kề bên có phải `alternative` hay không.
+| Sample ID | Tình huống thực tế                                   | Expected Output                                                                          | Quy tắc áp dụng                             |
+| :-------- | :--------------------------------------------------- | :--------------------------------------------------------------------------------------- | :------------------------------------------ |
+| **BDD02** | Ngã tư đô thị có taxi vàng và vạch kẻ crosswalk lớn  | Polygon `direct` & `alternative` phủ liên tục qua crosswalk; cắt vòng quanh đuôi xe taxi | Mục 3 (crosswalk liên tục), Mục 4           |
+| **BDD04** | Đường dốc 2 chiều vạch đôi vàng, xe đỗ hai bên       | 1 Polygon `area_type=direct` bên phải; IGNORE dải đỗ xe và làn ngược chiều               | Mục 4 (vạch đôi vàng cấm lấn làn)           |
+| **BDD05** | Cao tốc có vùng vạch chéo gore area bên phải         | Polygon `area_type=direct` bên trong làn; loại bỏ (IGNORE) toàn bộ vùng vạch chéo        | Mục 4 (loại trừ gore area)                  |
+| **BDD10** | Tuyến phố có dải vạch trắng đỗ xe (parking bay)      | Polygon `area_type=direct` bám vạch sơn làn; loại bỏ hoàn toàn các hốc đỗ xe             | Mục 4 (loại trừ bãi đỗ sát curb)            |
+| **BDD13** | Đường phố có xe bán tải trắng che khuất tầm nhìn     | Polygon ôm sát bánh và đuôi xe bán tải; phủ trùm qua vạch crosswalk vàng                 | Mục 3 & 5 (visible-only, không vẽ xuyên xe) |
+| **BDD14** | Cao tốc có paved shoulder rộng ngoài vạch liền trắng | Polygon bám mép trong vạch liền trắng; loại bỏ toàn bộ phần paved shoulder               | Mục 4 (loại trừ shoulder khẩn cấp)          |
+| **BDD18** | Đêm đô thị có làn xe buýt sơn màu đỏ ở giữa          | Polygon phủ trùm toàn bộ làn sơn đỏ của xe buýt; không đục lỗ chữ                        | Mục 4 (bus lane là drivable area)           |
+| **BDD21** | Đường có dải hộ lan tôn sóng (guardrail) bên phải    | Polygon kết thúc tại chân hộ lan; không mở rộng ra hành lang phía sau                    | Mục 4 (hộ lan là biên cứng)                 |
+| **BDD22** | Cao tốc rộng hoàng hôn thu hẹp dần về điểm tụ xa     | Kéo dài polygon dọc các làn xe đến điểm tụ xa nhất còn phân biệt được                    | Mục 3 (nhận diện tầm xa)                    |
+| **BDD24** | Phố hẹp có đống tuyết đùn cao co hẹp lòng đường      | Vẽ sát phần mặt đường lộ ra; gán `needs_review=true` và tag `image_escalate`             | Mục 5 (escalation do tuyết đùn)             |
+| **BDD25** | Đêm mưa ướt, ánh đèn neon phản chiếu chói chang      | Polygon phủ qua các vệt sáng phản quang trên mặt đường ướt                               | Mục 4 (không né vùng phản chiếu)            |
+
+---
+
+## 7. Common mistakes & Quality checklist
+
+| Lỗi thường gặp                                | Cách khắc phục                                                       | Mẫu minh họa     |
+| :-------------------------------------------- | :------------------------------------------------------------------- | :--------------- |
+| **Vẽ trùm lên vùng vạch chéo / gore area**    | Cắt bỏ vùng phân tách dòng xe ngoài vạch sơn biên                    | **BDD05**        |
+| **Gộp cả lề đường khẩn cấp (paved shoulder)** | Chặn đường biên tại vạch kẻ liền màu trắng sát mép phải              | **BDD14**        |
+| **Kéo polygon vào các ô đỗ xe sát vỉa hè**    | Giữ ranh giới thẳng theo vạch phân định làn đường                    | **BDD10**        |
+| **Cắt vụn polygon tại vạch kẻ người đi bộ**   | Phủ kín qua vạch crosswalk (dù là vạch trắng hay vàng)               | **BDD02, BDD13** |
+| **Vẽ xuyên qua thân xe phía trước**           | Bo sát mép cản sau, lốp và gầm xe nhìn thấy (visible-only)           | **BDD13**        |
+| **Dừng polygon quá sớm trên cao tốc thẳng**   | Kéo dài liên tục theo phối cảnh tới điểm biến mất ở xa               | **BDD22**        |
+| **Vượt qua dải hộ lan guardrail**             | Dừng điểm đặt polygon tại mép trong chân hộ lan                      | **BDD21**        |
+| **Khoét rỗng làn xe buýt sơn đỏ**             | Phủ kín bề mặt làn bus sơn đỏ vì vẫn là không gian xe chạy           | **BDD18**        |
+| **Cắt xẻ polygon để tránh vệt phản quang**    | Vẽ trùm qua vệt đèn phản chiếu trên mặt đường nhựa ướt               | **BDD25**        |
+| **Gán làn ngược chiều thành alternative**     | Chỉ gán làn cùng chiều; làn ngược chiều có vạch đôi vàng phải IGNORE | **BDD04**        |

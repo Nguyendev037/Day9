@@ -1,0 +1,42 @@
+Dựa theo workflow và các gate trong README, đây là thứ tự đầy đủ các file phải cập nhật trong thư mục project/ (theo trình tự thời gian trong lab):
+
+1. 00_team.md
+2. 01_problem_statement.md
+
+3. 02_guideline.md
+4. 03_ontology_and_cvat_setup.md
+5. 
+04_edge_cases/edge_case_cards.md
+
+6. 03_cvat_labels.json
+7. sample_pack.csv
+
+8. 06_calibration_measure.csv
+9. 06_calibration_report.csv
+
+10. 05_qa_plan.md
+11. 
+04_edge_cases/gold_decisions.csv
+
+12. FREEZE.txt
+
+13. 
+07_blind_handoff/clarification_log.csv
+
+14. 
+07_blind_handoff/peer_feedback.md
+
+15. 
+07_blind_handoff/transfer_score.csv
+
+16. 
+07_blind_handoff/gts_summary.md
+
+17. 08_revision_log.md
+18. 09_cvat_export_or_task_reference.txt
+
+Lưu ý:
+
+File edge_case_cards.md bắt buộc có ≥ 8 card trước khi freeze.
+FREEZE.txt được sinh tự động bởi make freeze (không edit thủ công).
+Các thư mục 06_calibration_exports/ và 07_blind_handoff/peer_output/ chứa file export (không cần edit nội dung).

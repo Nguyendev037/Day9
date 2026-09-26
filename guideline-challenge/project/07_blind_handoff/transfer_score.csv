@@ -1,15 +1,15 @@
 sample_id,decision_id,expected,severity,kind,peer_evidence,correct,note
-BDD18,d1,class=drivable_area (CVAT: road); LABEL visible areas only; needs_review=true for dark regions,major,decision,road [needs_review=false;state=__undefined__],0,Peer bỏ sót needs_review=true cho vùng tối đêm (BDD18 là ảnh đêm)
+BDD18,d1,class=drivable_area ; LABEL visible areas only; needs_review=true for dark regions,major,decision,road [needs_review=false;state=__undefined__],0,Peer bỏ sót needs_review=true cho vùng tối đêm (BDD18 là ảnh đêm)
 BDD18,d2,geometry: polygon ôm toàn bộ làn nhìn thấy; tolerance 2px mỗi cạnh,minor,geometry,road [needs_review=false;state=__undefined__],1,
-BDD18,d3,class=drivable_area (CVAT: road); IGNORE sidewalk and curb,critical,decision,road [needs_review=false;state=__undefined__],0,Peer không ignore sidewalk/curb; vẽ road bao gồm cả vỉa hè
+BDD18,d3,class=drivable_area ; IGNORE sidewalk and curb,critical,decision,road [needs_review=false;state=__undefined__],0,Peer không ignore sidewalk/curb; vẽ road bao gồm cả vỉa hè
 BDD18,d4,attribute:needs_review=true for occluded boundary,major,decision,road [needs_review=false;state=__undefined__],0,Peer bỏ sót needs_review=true cho vùng biên bị xe che
-BDD21,d1,class=drivable_area (CVAT: road); IGNORE area behind guardrail,critical,decision,road [needs_review=false;state=__undefined__],0,Peer không ignore vùng phía sau guardrail; guardrail là ranh giới drivable area
-BDD21,d2,class=drivable_area (CVAT: road); LABEL continuous road through intersection,major,decision,road [needs_review=false;state=__undefined__],1,
+BDD21,d1,class=drivable_area ; IGNORE area behind guardrail,critical,decision,road [needs_review=false;state=__undefined__],0,Peer không ignore vùng phía sau guardrail; guardrail là ranh giới drivable area
+BDD21,d2,class=drivable_area ; LABEL continuous road through intersection,major,decision,road [needs_review=false;state=__undefined__],1,
 BDD21,d3,geometry: do not extend polygon beyond visible boundary,minor,geometry,road [needs_review=false;state=__undefined__],1,
-BDD22,d1,class=drivable_area (CVAT: road); IGNORE reflection on wet surface,critical,decision,road [needs_review=false;state=__undefined__],0,Peer không ignore reflection trên mặt đường ướt; reflection không phải drivable area
-BDD22,d2,class=drivable_area (CVAT: road); LABEL all visible lanes,major,decision,road [needs_review=false;state=__undefined__],1,
-BDD19,d1,class=drivable_area (CVAT: road); count=2; separate lanes at merge point,major,decision,road [needs_review=false;state=__undefined__],0,Peer vẽ 1 polygon duy nhất; yêu cầu 2 polygons tách biệt tại merge point
+BDD22,d1,class=drivable_area ; IGNORE reflection on wet surface,critical,decision,road [needs_review=false;state=__undefined__],0,Peer không ignore reflection trên mặt đường ướt; reflection không phải drivable area
+BDD22,d2,class=drivable_area ; LABEL all visible lanes,major,decision,road [needs_review=false;state=__undefined__],1,
+BDD19,d1,class=drivable_area ; count=2; separate lanes at merge point,major,decision,road [needs_review=false;state=__undefined__],0,Peer vẽ 1 polygon duy nhất; yêu cầu 2 polygons tách biệt tại merge point
 BDD19,d2,attribute:state=clear for all visible drivable_area,minor,decision,road [needs_review=false;state=__undefined__],0,Peer để state=__undefined__ thay vì state=clear cho vùng drivable area rõ ràng
 BDD19,d3,geometry: polygon must follow lane markings at merge,minor,geometry,road [needs_review=false;state=__undefined__],1,
-BDD14,d1,class=drivable_area (CVAT: road); LABEL entire road surface; count=1,major,decision,road [needs_review=false;state=__undefined__],1,
+BDD14,d1,class=drivable_area ; LABEL entire road surface; count=1,major,decision,road [needs_review=false;state=__undefined__],1,
 BDD14,d2,attribute:state=clear; needs_review=false,minor,decision,road [needs_review=false;state=__undefined__],0,Peer để state=__undefined__ thay vì state=clear
