@@ -4,7 +4,7 @@
 
 <!--
 IMPORTANT MAPPING:
-- CVAT class name: `road`
+- CVAT class name: `area/driveable`
 - Guideline semantic: `drivable_area`
 - Mandatory Attribute: `area_type` phân tách giữa `direct` và `alternative`.
 - Peer annotator bắt buộc chọn thuộc tính `area_type` cho từng polygon vẽ ra.
@@ -30,12 +30,12 @@ Hướng dẫn gán nhãn phân đoạn **drivable area** theo chuẩn bộ dữ
 
 ### Bảng Taxonomy chi tiết
 
-| Name               | Type      | Allowed Values                  | Default  | Bắt buộc | Rationale & Ý nghĩa                                                                                                           |
+| Name | Type | Allowed Values | Default | Bắt buộc | Rationale & Ý nghĩa |
 | :----------------- | :-------- | :------------------------------ | :------- | :------- | :---------------------------------------------------------------------------------------------------------------------------- |
-| **`road`**         | Class     | _Mapped to `drivable_area`_     | -        | Có       | Lớp đối tượng tổng cho mặt đường di chuyển.                                                                                   |
-| **`area_type`**    | Attribute | **`direct`**, **`alternative`** | `direct` | **Có**   | **Cốt lõi BDD100K:**<br>• `direct`: Làn ego car đang chạy.<br>• `alternative`: Làn kề cận cùng chiều được phép đi/chuyển vào. |
-| **`state`**        | Attribute | **`clear`**, **`ambiguous`**    | `clear`  | Có       | Độ rõ ràng của vạch kẻ và ranh giới mép đường.                                                                                |
-| **`needs_review`** | Attribute | **`false`**, **`true`**         | `false`  | Có       | Đánh dấu khi nghi ngờ ranh giới do bị che/mất vạch kẻ.                                                                        |
+| **`area/driveable`** | Class | _Mapped to `drivable_area`_ | - | Có | Lớp đối tượng tổng cho mặt đường di chuyển. |
+| **`area_type`** | Attribute | **`direct`**, **`alternative`** | `direct` | **Có** | **Cốt lõi BDD100K:**<br>• `direct`: Làn ego car đang chạy.<br>• `alternative`: Làn kề cận cùng chiều được phép đi/chuyển vào. |
+| **`state`** | Attribute | **`clear`**, **`ambiguous`** | `clear` | Có | Độ rõ ràng của vạch kẻ và ranh giới mép đường. |
+| **`needs_review`** | Attribute | **`false`**, **`true`** | `false` | Có | Đánh dấu khi nghi ngờ ranh giới do bị che/mất vạch kẻ. |
 
 ---
 
@@ -60,39 +60,39 @@ Hướng dẫn gán nhãn phân đoạn **drivable area** theo chuẩn bộ dữ
 
 ## 4. Inclusion / Exclusion Matrix
 
-| Tình huống / Đối tượng            | Quyết định | Giá trị gán nhãn                   | Ghi chú                                                                |
+| Tình huống / Đối tượng | Quyết định | Giá trị gán nhãn | Ghi chú |
 | :-------------------------------- | :--------- | :--------------------------------- | :--------------------------------------------------------------------- |
-| Làn đường xe ego đang chạy        | **LABEL**  | `area_type=direct`                 | Kéo dài tối đa đến khi tầm nhìn bị che khuất                           |
-| Làn kề bên cùng chiều             | **LABEL**  | `area_type=alternative`            | Phân cách bởi vạch đứt hoặc vạch liền cho phép                         |
-| Ngã tư / Giao lộ mở rộng          | **LABEL**  | `area_type=direct` / `alternative` | Khu vực xe chuẩn bị đi thẳng là `direct`, nhánh rẽ mở là `alternative` |
-| Vạch mắt võng / Vùng đảo chevron  | **IGNORE** | -                                  | Không đi vào được theo luật                                            |
-| Làn ngược chiều có dải phân cách  | **IGNORE** | -                                  | Không phải làn hợp lệ cho ego-vehicle                                  |
-| Vỉa hè, thảm cỏ, rào hộ lan       | **IGNORE** | -                                  | Chướng ngại vật tĩnh ngoại vi                                          |
-| Bãi đỗ xe bên đường (parking lot) | **IGNORE** | -                                  | Trừ khi là làn lưu thông chính xuyên qua bãi                           |
-| Mặt đường có vũng nước/bóng râm   | **LABEL**  | Theo làn (`direct`/`alternative`)  | Vẫn là mặt đường di chuyển được                                        |
+| Làn đường xe ego đang chạy | **LABEL** | `area_type=direct` | Kéo dài tối đa đến khi tầm nhìn bị che khuất |
+| Làn kề bên cùng chiều | **LABEL** | `area_type=alternative` | Phân cách bởi vạch đứt hoặc vạch liền cho phép |
+| Ngã tư / Giao lộ mở rộng | **LABEL** | `area_type=direct` / `alternative` | Khu vực xe chuẩn bị đi thẳng là `direct`, nhánh rẽ mở là `alternative` |
+| Vạch mắt võng / Vùng đảo chevron | **IGNORE** | - | Không đi vào được theo luật |
+| Làn ngược chiều có dải phân cách | **IGNORE** | - | Không phải làn hợp lệ cho ego-vehicle |
+| Vỉa hè, thảm cỏ, rào hộ lan | **IGNORE** | - | Chướng ngại vật tĩnh ngoại vi |
+| Bãi đỗ xe bên đường (parking lot) | **IGNORE** | - | Trừ khi là làn lưu thông chính xuyên qua bãi |
+| Mặt đường có vũng nước/bóng râm | **LABEL** | Theo làn (`direct`/`alternative`) | Vẫn là mặt đường di chuyển được |
 
 ---
 
 ## 5. Visibility, Occlusion & Ambiguity Handling
 
-| Hiện trạng quan sát                            | Hành động                         | Thuộc tính áp dụng                                  |
+| Hiện trạng quan sát | Hành động | Thuộc tính áp dụng |
 | :--------------------------------------------- | :-------------------------------- | :-------------------------------------------------- |
-| Vạch kẻ rõ, tầm nhìn quang đãng                | Vẽ polygon chuẩn                  | `state=clear`, `needs_review=false`                 |
-| Bị che khuất nhẹ bởi ô tô (1 - 49%)            | Vẽ bao quanh phần đường thấy được | `state=clear`, `needs_review=false`                 |
-| Bị che khuất nặng (50 - 80%) / vạch mờ         | Vẽ phần thấy được                 | `state=ambiguous`, `needs_review=true`              |
-| Bị che khuất hoàn toàn (100%)                  | **Bỏ qua (IGNORE)**               | Không phỏng đoán hình học                           |
-| Tầm nhìn cực thấp (mưa bão, ban đêm chói sáng) | Không phân định nổi làn           | Gán polygon khả nghi + đặt tag **`image_escalate`** |
+| Vạch kẻ rõ, tầm nhìn quang đãng | Vẽ polygon chuẩn | `state=clear`, `needs_review=false` |
+| Bị che khuất nhẹ bởi ô tô (1 - 49%) | Vẽ bao quanh phần đường thấy được | `state=clear`, `needs_review=false` |
+| Bị che khuất nặng (50 - 80%) / vạch mờ | Vẽ phần thấy được | `state=ambiguous`, `needs_review=true` |
+| Bị che khuất hoàn toàn (100%) | **Bỏ qua (IGNORE)** | Không phỏng đoán hình học |
+| Tầm nhìn cực thấp (mưa bão, ban đêm chói sáng) | Không phân định nổi làn | Gán polygon khả nghi + đặt tag **`image_escalate`** |
 
 ---
 
 ## 6. Examples (Minh họa quyết định)
 
-| Sample ID    | Tình huống                                  | Expected Output                                                                                          | Ghi chú áp dụng                                          |
+| Sample ID | Tình huống | Expected Output | Ghi chú áp dụng |
 | :----------- | :------------------------------------------ | :------------------------------------------------------------------------------------------------------- | :------------------------------------------------------- |
-| **BDD_EX01** | Cao tốc ban ngày 3 làn, xe đang ở làn giữa  | • 1 Polygon `area_type=direct` (làn giữa).<br>• 2 Polygon `area_type=alternative` (làn trái & làn phải). | Mục 2 & 3: Tách rõ 3 instance riêng biệt, không gộp làn. |
-| **BDD_EX02** | Đường đô thị 1 làn mỗi hướng, xe đi thẳng   | • 1 Polygon `area_type=direct`.<br>• Làn đối diện bỏ qua (IGNORE) nếu có vạch đôi vàng liền.             | Không gán alternative cho làn ngược chiều cấm lấn.       |
-| **BDD_EX03** | Có xe tải phía trước che khuất một phần làn | • Vẽ polygon `direct` bọc sát phần bánh/gầm xe tải nhìn thấy.                                            | Rule Visible-only (Mục 3).                               |
-| **BDD_EX04** | Đoạn đường đang thi công có cọc tiêu        | • Phần làn bị rào chắn -> IGNORE.<br>• Phần hở còn lại xe chạy -> `direct` hoặc `alternative`.           | `state=ambiguous` nếu ranh giới tạm bợ.                  |
+| **BDD_EX01** | Cao tốc ban ngày 3 làn, xe đang ở làn giữa | • 1 Polygon `area_type=direct` (làn giữa).<br>• 2 Polygon `area_type=alternative` (làn trái & làn phải). | Mục 2 & 3: Tách rõ 3 instance riêng biệt, không gộp làn. |
+| **BDD_EX02** | Đường đô thị 1 làn mỗi hướng, xe đi thẳng | • 1 Polygon `area_type=direct`.<br>• Làn đối diện bỏ qua (IGNORE) nếu có vạch đôi vàng liền. | Không gán alternative cho làn ngược chiều cấm lấn. |
+| **BDD_EX03** | Có xe tải phía trước che khuất một phần làn | • Vẽ polygon `direct` bọc sát phần bánh/gầm xe tải nhìn thấy. | Rule Visible-only (Mục 3). |
+| **BDD_EX04** | Đoạn đường đang thi công có cọc tiêu | • Phần làn bị rào chắn -> IGNORE.<br>• Phần hở còn lại xe chạy -> `direct` hoặc `alternative`. | `state=ambiguous` nếu ranh giới tạm bợ. |
 
 ---
 

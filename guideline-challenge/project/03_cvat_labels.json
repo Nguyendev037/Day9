@@ -1,33 +1,34 @@
 [
   {
-    "name": "road",
-    "id": 871,
-    "color": "#F9A825",
+    "name": "area/driveable",
+    "id": 8504158,
+    "color": "#fafa37",
     "type": "polygon",
     "attributes": [
       {
-        "id": 28,
-        "name": "state",
+        "id": 2674173,
+        "name": "area_type",
         "input_type": "select",
-        "mutable": true,
-        "values": ["__undefined__", "red", "yellow", "green", "off", "unknown"],
-        "default_value": "__undefined__"
+        "mutable": false,
+        "values": ["direct", "alternative"],
+        "default_value": "direct"
       },
       {
-        "id": 29,
+        "id": 2674174,
+        "name": "state",
+        "input_type": "select",
+        "mutable": false,
+        "values": ["clear", "ambiguous"],
+        "default_value": "clear"
+      },
+      {
+        "id": 2674175,
         "name": "needs_review",
         "input_type": "checkbox",
         "mutable": false,
-        "values": ["false"],
+        "values": ["false", "true"],
         "default_value": "false"
       }
     ]
-  },
-  {
-    "name": "image_escalate",
-    "id": 872,
-    "color": "#8E24AA",
-    "type": "tag",
-    "attributes": []
   }
 ]

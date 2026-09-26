@@ -20,15 +20,15 @@ Tất cả các case dưới đây dùng semantic `drivable_area`, nhưng khi im
 
 ---
 
-CASE ID: EC01
-Sample: BDD05
-Scene: Đường cao tốc có làn xe đang lưu thông và một vùng mặt đường lớn được kẻ các vạch chéo ở bên phải roadway.
-Observation: Vùng kẻ chéo có cùng bề mặt asphalt với roadway và nằm sát làn xe nên có thể khiến annotator coi toàn bộ phần asphalt là drivable area. Tuy nhiên vùng này đóng vai trò là vùng phân tách/gore và không phải phần drivable area dành cho xe di chuyển bình thường.
-Decision: IGNORE
-Expected: `drivable_area` polygon (CVAT: class `road`) chỉ bao phủ phần drivable area dành cho xe di chuyển bình thường; vùng gore/hatched được loại khỏi polygon.
-Rationale: Downstream cần phân biệt không gian thực sự dành cho xe di chuyển với phần asphalt dùng để phân tách dòng xe. Gán vùng gore thành drivable area sẽ làm mở rộng sai vùng không gian xe có thể sử dụng.
-Common mistake: Gán toàn bộ vùng asphalt vào `drivable_area` (CVAT: `road`) hoặc tạo polygon bao phủ cả vùng gạch chéo.
-Diversity: ambiguity / conflict / critical
+CASE ID: EC01<br>
+Sample: BDD05<br>
+Scene: Đường cao tốc có làn xe đang lưu thông và một vùng mặt đường lớn được kẻ các vạch chéo ở bên phải roadway.<br>
+Observation: Vùng kẻ chéo có cùng bề mặt asphalt với roadway và nằm sát làn xe nên có thể khiến annotator coi toàn bộ phần asphalt là drivable area. Tuy nhiên vùng này đóng vai trò là vùng phân tách/gore và không phải phần drivable area dành cho xe di chuyển bình thường.<br>
+Decision: IGNORE<br>
+Expected: `drivable_area` polygon (CVAT: class `road`) chỉ bao phủ phần drivable area dành cho xe di chuyển bình thường; vùng gore/hatched được loại khỏi polygon.<br>
+Rationale: Downstream cần phân biệt không gian thực sự dành cho xe di chuyển với phần asphalt dùng để phân tách dòng xe. Gán vùng gore thành drivable area sẽ làm mở rộng sai vùng không gian xe có thể sử dụng.<br>
+Common mistake: Gán toàn bộ vùng asphalt vào `drivable_area` (CVAT: `road`) hoặc tạo polygon bao phủ cả vùng gạch chéo.<br>
+Diversity: ambiguity / conflict / critical<br>
 
 ---
 

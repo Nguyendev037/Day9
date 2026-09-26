@@ -5,9 +5,9 @@
 Xác định và gán nhãn phân đoạn **drivable area** (vùng mặt đường xe có thể di chuyển) trên ảnh thuộc tập dữ liệu chuẩn **BDD100K**, phân định rõ ràng giữa làn di chuyển trực tiếp của xe tự chủ (**direct**) và các làn đường thay thế hợp lệ (**alternative**), đồng thời bóc tách chuẩn xác ranh giới giữa mặt đường di chuyển với **vỉa hè, lề đường (curb/shoulder), dải phân cách, bãi đỗ xe hoặc vùng vạch kẻ mắt võng/chữ V (gore/hatched area)**.
 
 **Mapping CVAT:**
-Trong CVAT, nhằm tối ưu quy trình gán nhãn và tránh tạo nhiều class phức tạp, ta có thể triển khai theo 1 trong 2 phương án (ở đây chuẩn hóa theo thuộc tính phân loại):
+Trong CVAT, nhằm tối ưu quy trình gán nhãn và tránh tạo nhiều class phức tạp, ta chuẩn hóa theo thuộc tính phân loại:
 
-- Class CVAT: `road` (hoặc `drivable_area`).
+- Class CVAT: `area/driveable`.
 - Semantic Type (bắt buộc qua attribute `area_type`):
   - **`direct`**: Khu vực làn xe hiện tại mà xe tự chủ (ego-vehicle) đang di chuyển trực tiếp bên trong (có quyền ưu tiên quỹ đạo cao nhất).
   - **`alternative`**: Khu vực các làn đường khác cùng chiều xe chạy mà xe tự chủ có thể chuyển làn sang hợp pháp mà không vi phạm luật giao thông.
@@ -19,7 +19,7 @@ Trong CVAT, nhằm tối ưu quy trình gán nhãn và tránh tạo nhiều clas
 
 2. **Output annotation nào thực sự cần?**
    - **Geometry:** Polygon (hoặc multi-polygon khép kín).
-   - **Class:** `road` (trong CVAT) - **Semantic:** `drivable_area`.
+   - **Class:** `area/driveable` (trong CVAT) - **Semantic:** `drivable_area`.
    - **Attributes cốt lõi:**
      - `area_type = direct | alternative` (Bắt buộc phân định rõ theo chuẩn BDD100K).
      - `state = clear | ambiguous`.
@@ -59,7 +59,7 @@ Trong CVAT, nhằm tối ưu quy trình gán nhãn và tránh tạo nhiều clas
 
 Blind test sẽ đánh giá trực tiếp dựa trên:
 
-- **CLASS & ATTRIBUTE:** Phân loại đúng `road` với `area_type` (`direct` vs `alternative`).
+- **CLASS & ATTRIBUTE:** Phân loại đúng `area/driveable` với `area_type` (`direct` vs `alternative`).
 - **IGNORE:** Loại bỏ đúng các vùng ngoài scope.
 - **AMBIGUITY FLAG:** Gán đúng `needs_review=true` và `state=ambiguous` tại các vùng tranh chấp/vạch mờ.
 - **ESCALATE:** Đặt tag `image_escalate` chính xác khi có điều kiện thời tiết khắc nghiệt.
