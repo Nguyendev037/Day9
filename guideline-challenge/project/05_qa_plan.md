@@ -1,9 +1,10 @@
 # QA Plan + Quality Gates
 
 **Project:** Drivable Area Segmentation
-**CVAT class:** `road`
+**CVAT class:** `area/driveable`
 **Guideline semantic:** `drivable_area`
 **Guideline version:** v2 → v3 sau blind handoff
+**Calibration status:** Hoàn thành với 5 samples, 4 annotators
 
 QA được thiết kế để kiểm tra hai loại chất lượng chính:
 
@@ -59,8 +60,8 @@ QA kiểm tra các thành phần sau:
 
 | Thành phần     | Nội dung kiểm tra                                                                 |
 | -------------- | --------------------------------------------------------------------------------- |
-| Class          | Chỉ sử dụng CVAT class `road`                                                     |
-| Semantic       | `road` phải đại diện cho `drivable_area`                                          |
+| Class          | Chỉ sử dụng CVAT class `area/driveable`                                          |
+| Semantic       | `area/driveable` phải đại diện cho `drivable_area`                              |
 | Geometry       | Polygon bao phủ vùng drivable area nhìn thấy                                      |
 | Instance       | Mỗi vùng drivable area liên tục là một polygon                                    |
 | Inclusion      | Vùng đủ bằng chứng và width ≥ 2m phải được label                                  |
@@ -81,11 +82,11 @@ Trước khi submit/export, annotator kiểm tra **100% annotation của chính 
 
 #### 3.1 Class
 
-* [ ] Tất cả polygon sử dụng class `road`.
+* [ ] Tất cả polygon sử dụng class `area/driveable`.
 * [ ] Không tạo class khác ngoài ontology.
-* [ ] Không nhầm `road` của CVAT với semantic khác.
+* [ ] Không nhầm `area/driveable` của CVAT với semantic khác.
 
-> Trong project này: `CVAT road = guideline drivable_area`.
+> Trong project này: `CVAT area/driveable = guideline drivable_area`.
 
 #### 3.2 Geometry
 
@@ -142,15 +143,16 @@ Các sample có một hoặc nhiều tình huống sau phải được review:
 
 Các sample này được ưu tiên review **100%**.
 
-Trong project hiện tại, calibration evidence đã cho thấy:
+Trong project hiện tại, calibration evidence (06_calibration_report.csv) đã cho thấy:
 
-* `BDD05`: disagreement về số lượng drivable-area polygons.
-* `BDD08`: disagreement liên quan reflection.
-* `BDD24`: boundary bị snow che.
-* `BDD18`: low visibility.
-* `BDD25`: wet road / reflection.
-* `BDD21`: vùng phía sau guardrail.
-* `BDD13`: occluded drivable area.
+* **BDD05**: disagreement về geometry (13-31 điểm) - ranh giới gore area chưa rõ
+* **BDD10**: disagreement về geometry - ranh giới parking bay chưa nhất quán
+* **BDD13**: disagreement về geometry - xử lý occlusion xe bán tải khác nhau
+* **BDD19**: ranh giới mảng bê tông vá (surface transition) chưa có rule rõ
+* **BDD21**: disagreement về geometry - ranh giới chân hộ lan guardrail
+* **BDD18**: low visibility (blind set - chưa calibration)
+* **BDD24**: boundary bị snow che (blind set - chưa calibration)
+* **BDD25**: wet road / reflection (blind set - chưa calibration)
 
 Các pattern này được coi là risk patterns cần tiếp tục theo dõi.
 
@@ -174,11 +176,10 @@ Random sampling phải được thực hiện độc lập với annotator khi c
 
 Calibration được dùng để phát hiện disagreement trước khi freeze gold.
 
-Trong evidence hiện tại:
+ Trong evidence hiện tại (06_calibration_measure.csv):
 
-* `BDD04`, `BDD06`, `BDD07`, `BDD09`, `BDD24`, `BDD26` có agreement cao.
-* `BDD05` có disagreement về polygon count.
-* `BDD08` có disagreement về polygon count.
+* `BDD05`, `BDD10`, `BDD13`, `BDD19`, `BDD21` có agreement 100% về count và attributes
+* **BUT** có disagreement về geometry (tọa độ polygon khác nhau) do guideline chưa đủ rõ
 
 ### Rule xử lý
 
@@ -219,9 +220,11 @@ Mỗi defect phải được phân loại theo nguyên nhân.
 
 `06_calibration_report.csv` đã ghi nhận:
 
-* `BDD05` count disagreement → `guideline_gap`
-* `BDD08` count disagreement → `guideline_gap`
-* `needs_review` formatting → `execution_error`
+* **BDD05** geometry disagreement (gore area boundary) → `guideline_gap`
+* **BDD10** geometry disagreement (parking bay boundary) → `guideline_gap`
+* **BDD13** geometry disagreement (occlusion handling) → `guideline_gap`
+* **BDD19** semantic ambiguity (surface transition) → `guideline_gap`
+* **BDD21** geometry disagreement (guardrail boundary) → `guideline_gap`
 
 Các issue này phải được phản ánh vào guideline/revision log nếu chúng ảnh hưởng đến annotation process.
 
@@ -446,12 +449,13 @@ Blind set phải bao phủ nhiều loại tình huống thay vì chỉ ảnh bì
 
 Theo `sample_pack.csv`, blind set hiện có:
 
-| Sample | Risk           |
-| ------ | -------------- |
-| BDD18  | low visibility |
-| BDD21  | critical       |
-| BDD22  | ambiguity      |
-| BDD19  | edge           |
+| Sample | Risk           | Tags | Quyết định gold (từ gold_decisions.csv) |
+| ------ | -------------- | ---- | ---------------------------------------- |
+| BDD01  | normal         | normal | Baseline kiểm tra độ chính xác cơ bản |
+| BDD18  | low visibility | edge;low_visibility | Cảnh ban đêm có làn xe buýt sơn đỏ |
+| BDD25  | low visibility | edge;low_visibility | Phản quang mặt đường ướt ban đêm |
+| BDD24  | critical;ambiguity | critical;ambiguity | Đống tuyết đùn lấn chiếm lòng đường |
+| BDD23  | ambiguity;edge | ambiguity;edge | Mép đường bị tuyết che khuất cần escalate |
 
 Mục đích là kiểm tra peer có thể áp dụng guideline mà **không cần owner giải thích trực tiếp** hay không.
 
@@ -572,13 +576,15 @@ v2 = sau calibration
 v3 = sau blind handoff
 ```
 
-Hiện tại guideline đã ở **v2** và revision log đã ghi các thay đổi liên quan:
+Hiện tại guideline đã ở **v2** (sau calibration) và revision log đã ghi các thay đổi liên quan:
 
-* mapping `CVAT road = drivable_area`;
-* rule về object count;
-* occlusion/reflection;
-* minimum size;
-* attribute format.
+* mapping `CVAT area/driveable = guideline drivable_area`;
+* minimum polygon complexity (≥ 10 điểm);
+* gore area boundary rule (loại bỏ hoàn toàn vùng vạch chéo);
+* parking bay boundary rule (dừng tại vạch sơn phân cách);
+* occlusion threshold (51-80% che → needs_review=true);
+* guardrail boundary rule (kết thúc TẠI CHÂN hộ lan);
+* surface transition rule (mảng bê tông vá ranh giới không rõ → state=ambiguous)
 
 Sau blind handoff, các finding phải được dùng để quyết định nội dung **v3**.
 
@@ -602,6 +608,7 @@ Một batch được **PASS** khi đáp ứng tất cả điều kiện:
 
 5. Gold/reference geometry đạt IoU ≥ 0.90
    trên các sample được đánh giá geometry
+   **Lưu ý:** Polygon phải có ≥ 10 điểm (theo rule mới sau calibration)
 
 6. Không còn guideline gap chưa xử lý
    có khả năng ảnh hưởng production

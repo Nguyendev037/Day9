@@ -16,10 +16,11 @@ File này là kho nội bộ của nhóm, **không gửi cho peer**. Card dùng 
 
 **Mapping CVAT <-> Guideline:**
 
-- CVAT class: `road` (semantic: `drivable_area`).
+- CVAT class: `area/driveable` (semantic: `drivable_area`).
 - BDD100K attribute: `area_type` (`direct` | `alternative`).
 - Phân định rõ ràng: `direct` (làn xe ego đang chạy) và `alternative` (làn cùng chiều hợp lệ kế cận/chuyển làn được).
 - Không tự suy đoán phần bị che khuất hoàn toàn (visible-only).
+- **Minimum polygon complexity: ≥ 10 điểm** (theo rule sau calibration).
 
 ---
 
@@ -28,7 +29,7 @@ Sample: BDD05
 Scene: Đường cao tốc ngoại ô ban ngày, phía bên phải có vùng nhập/tách làn với đảo tam giác sơn vạch xương cá/vạch chéo màu trắng (gore/chevron area), tiếp giáp với hàng rào và công trình thép.
 Observation: Vùng vạch chéo có cùng cốt cao độ và cùng chất liệu bê tông nhựa với mặt đường chính. Annotator rất dễ nhầm lẫn coi toàn bộ thảm nhựa là drivable area và vẽ polygon trùm qua cả vùng vạch chéo.
 Decision: IGNORE
-Expected: Polygon `drivable_area` (CVAT: `road`, `area_type=direct`) chỉ bao phủ làn đường xe đang chạy; vùng vạch chéo phân dòng (gore area) và dải phân cách mềm bên phải bị loại bỏ hoàn toàn (IGNORE).
+Expected: Polygon `area/driveable` (CVAT: `area/driveable`, `area_type=direct`) chỉ bao phủ làn đường xe đang chạy; vùng vạch chéo phân dòng (gore area) và dải phân cách mềm bên phải bị loại bỏ hoàn toàn (IGNORE).
 Rationale: Theo luật giao thông và chuẩn BDD100K, vùng gạch chéo là vùng đệm an toàn cấm xe đè vạch/lưu thông. Gán vùng này là drivable area sẽ khiến bộ lập quỹ đạo điều khiển xe đâm vào vùng xung đột tách/nhập làn.
 Common mistake: Vẽ một polygon duy nhất bao trùm cả làn đường và toàn bộ vùng vạch gạch chéo bên phải.
 Diversity: conflict / critical / ambiguous semantics
@@ -40,7 +41,7 @@ Sample: BDD14
 Scene: Đường cao tốc nhiều làn ban ngày, lưu lượng xe đông đúc; phía bên phải ngoài vạch sơn liền màu trắng là phần lề đường trải nhựa (paved shoulder) rất rộng tiếp tiếp giáp taluy cỏ.
 Observation: Paved shoulder có bề mặt nhựa đường tương đồng với làn xe chính. Do không có gờ bê tông ngăn cách, người gán nhãn dễ nhầm shoulder là một làn xe bổ sung (`alternative`).
 Decision: IGNORE
-Expected: Polygon `road` (`area_type=direct`) bao phủ làn xe ego đang chạy; các làn bên trái gán `area_type=alternative`. Phần paved shoulder ngoài vạch liền trắng bên phải bị LOẠI BỎ (IGNORE).
+Expected: Polygon `area/driveable` (`area_type=direct`) bao phủ làn xe ego đang chạy; các làn bên trái gán `area_type=alternative`. Phần paved shoulder ngoài vạch liền trắng bên phải bị LOẠI BỎ (IGNORE).
 Rationale: Lề đường khẩn cấp không phục vụ lưu thông xe bình thường. Bao gồm cả shoulder sẽ làm sai lệch không gian di chuyển hợp pháp của hệ thống tự hành.
 Common mistake: Kéo polygon vượt qua vạch sơn liền trắng sang tận chân taluy cỏ bên phải.
 Diversity: ambiguity / conflict
@@ -52,7 +53,7 @@ Sample: BDD10
 Scene: Tuyến phố đô thị 2 chiều với vạch tim đường màu vàng đứt đoạn; hai bên lề đường có vạch sơn trắng phân định dải đỗ xe (parking bay) với nhiều ô tô đang đỗ sát curb.
 Observation: Khu vực đỗ xe cùng bề mặt asphalt với lòng đường lưu thông. Khoảng trống giữa các xe đỗ hoặc phía sau đuôi xe có thể khiến annotator phân vân có nên khoét vào sát mép vỉa hè hay không.
 Decision: IGNORE
-Expected: `drivable_area` (CVAT: `road`, `area_type=direct`) giới hạn chuẩn xác bên trong vạch sơn trắng phân định làn xe chạy và vạch vàng tim đường; toàn bộ dải đỗ xe và các xe đỗ hai bên bị loại khỏi polygon. Làn đối diện bên trái vạch vàng không gán alternative (IGNORE).
+Expected: `area/driveable` (CVAT: `area/driveable`, `area_type=direct`) giới hạn chuẩn xác bên trong vạch sơn trắng phân định làn xe chạy và vạch vàng tim đường; toàn bộ dải đỗ xe và các xe đỗ hai bên bị loại khỏi polygon. Làn đối diện bên trái vạch vàng không gán alternative (IGNORE).
 Rationale: Downstream perception cần không gian hành lang giao thông thực tế. Việc mở rộng polygon vào các hốc đỗ xe sát vỉa hè gây nguy cơ xe tự hành lách sai làn và va chạm với xe đang đỗ.
 Common mistake: Kéo polygon lượn lách vào các khoảng trống giữa các xe đỗ sát vỉa hè.
 Diversity: ambiguity / conflict / critical
