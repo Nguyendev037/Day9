@@ -17,7 +17,7 @@
         "id": 2674174,
         "name": "state",
         "input_type": "select",
-        "mutable": false,
+        "mutable": true,
         "values": ["clear", "ambiguous"],
         "default_value": "clear"
       },
@@ -25,7 +25,7 @@
         "id": 2674175,
         "name": "needs_review",
         "input_type": "checkbox",
-        "mutable": false,
+        "mutable": true,
         "values": ["false", "true"],
         "default_value": "false"
       }
