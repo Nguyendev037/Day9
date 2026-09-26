@@ -2,7 +2,9 @@
 
 ## Bài toán
 
-Xác định và gán nhãn **vùng mặt đường có thể sử dụng cho xe di chuyển bình thường** trong ảnh giao thông đường bộ, đặc biệt trong các tình huống ranh giới giữa **roadway với vỉa hè, bãi đỗ xe, lề đường, dải phân cách hoặc vùng gạch chéo** khó phân biệt.
+Xác định và gán nhãn **drivable area** (vùng mặt đường có thể lái xe) trên ảnh BDD100K, đặc biệt trong các tình huống ranh giới giữa **roadway với vỉa hè, bãi đỗ xe, lề đường, dải phân cách hoặc vùng gạch chéo** khó phân biệt.
+
+**Mapping CVAT:** Trong CVAT, class được đặt tên là `road`, nhưng semantic là `drivable_area` theo định nghĩa của guideline. Peer cần ghi nhớ: **CVAT `road` = guideline `drivable_area`**.
 
 ## Downstream contract
 
@@ -12,13 +14,13 @@ Xác định và gán nhãn **vùng mặt đường có thể sử dụng cho xe
 2. **Output annotation nào thực sự cần?**
 
    * **Geometry:** polygon.
-   * **Class:** `drivable_area`.
-   * **Attribute:** `needs_review = false/true`.
+   * **Class:** `road` (trong CVAT) - **semantic: drivable_area** (theo guideline).
+   * **Attribute:** `needs_review = false/true`, `state = __undefined__/clear/ambiguous`.
    * **Image-level tag:** `image_escalate` khi ambiguity ảnh hưởng đến toàn ảnh.
-     Chỉ sử dụng hình học nhìn thấy được, không suy đoán phần đường bị che hoàn toàn.
+     Chỉ sử dụng hình học nhìn thấy được, không suy đoán phần drivable area bị che hoàn toàn.
 
 3. **Failure nào gây hậu quả lớn nhất?**
-   Lỗi nghiêm trọng nhất là **gán một vùng không drivable thành drivable hoặc bỏ sót một vùng roadway drivable lớn**, vì điều này làm sai không gian mà hệ thống nhận thức cho rằng xe có thể di chuyển.
+   Lỗi nghiêm trọng nhất là **gán một vùng không drivable area thành drivable area hoặc bỏ sót một vùng drivable area lớn**, vì điều này làm sai không gian mà hệ thống nhận thức cho rằng xe có thể di chuyển.
 
 4. **Khi ambiguity không resolve được, ai / ở đâu là escalation path?**
 
@@ -32,19 +34,21 @@ Xác định và gán nhãn **vùng mặt đường có thể sử dụng cho xe
 
 * **Ngoài scope (ignore):** vỉa hè, lối đi bộ, cỏ/thảm thực vật, dải phân cách, barrier/guardrail, đất/cát, khu vực chỉ dành cho parking, shoulder khẩn cấp được phân biệt rõ và vùng gore/hatched không dành cho xe di chuyển bình thường.
 
-* **Geometry tolerance:** polygon phải bám sát ranh giới vật lý nhìn thấy của roadway; chấp nhận sai lệch nhỏ ở mức khoảng **2–3 px tại đường biên** do thao tác đặt điểm, nhưng không chấp nhận polygon ăn đáng kể sang vùng non-drivable.
+* **Geometry tolerance:** polygon phải bám sát ranh giới vật lý nhìn thấy của drivable area; chấp nhận sai lệch nhỏ ở mức khoảng **2-3 px tại đường biên** do thao tác đặt điểm, nhưng không chấp nhận polygon ăn đáng kể sang vùng non-drivable area.
 
 ## Output chấm được
 
 Blind test có thể chấm các quyết định:
 
-* **LABEL:** `drivable_area` polygon;
+* **LABEL:** class `road` (CVAT) = semantic `drivable_area` (guideline);
 * **IGNORE:** không tạo polygon cho vùng ngoài scope;
 * **UNKNOWN / ambiguity:** thể hiện bằng `needs_review=true`;
 * **ESCALATE:** thể hiện bằng tag `image_escalate`;
-* **GEOMETRY:** kiểm tra polygon có bám đúng ranh giới roadway hay không.
+* **GEOMETRY:** kiểm tra polygon có bám đúng ranh giới drivable area hay không.
 
 Mọi quyết định phải được thể hiện trực tiếp trong file export CVAT; quyết định chỉ giải thích bằng lời nhưng không xuất hiện trong annotation sẽ không được chấm.
+
+**Ghi chú:** tất cả reference đến `drivable_area` trong guideline tương đương với class `road` trong CVAT.
 
 ## Dữ liệu và giới hạn
 
