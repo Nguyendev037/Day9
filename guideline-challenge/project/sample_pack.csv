@@ -1,18 +1,15 @@
 sample_id,split,tags,reason
-BDD01,example,normal,
-BDD02,example,normal,
-BDD03,example,normal,
-BDD04,calibration,normal,
-BDD05,calibration,normal,
-BDD06,calibration,normal,
-BDD07,calibration,normal,
-BDD08,calibration,ambiguity,
-BDD09,calibration,normal,
-BDD24,calibration,conflict,
-BDD26,calibration,low_visibility,
-BDD18,blind,normal,
-BDD21,blind,critical;edge,
-BDD22,blind,ambiguity;edge
-BDD19,blind,edge
-BDD14,blind,normal
-
+BDD02,example,normal;edge,Chứa vạch crosswalk rõ ràng để làm ví dụ standard cho guideline
+BDD14,example,conflict,Ví dụ kinh điển về lề đường paved shoulder bị loại bỏ
+BDD22,example,small_far,Ví dụ cho quy tắc kéo dài polygon đến điểm tụ
+BDD04,example,conflict,Ví dụ cho quy tắc loại bỏ làn ngược chiều có vạch đôi vàng
+BDD05,calibration,critical;conflict,Kiểm tra khả năng loại bỏ vùng vạch chéo gore area nguy hiểm
+BDD10,calibration,critical;conflict,Kiểm tra ranh giới khu vực đỗ xe parking bay sát vỉa hè
+BDD13,calibration,occlusion,Kiểm tra nguyên tắc visible-only khi bị xe bán tải che khuất
+BDD21,calibration,critical;conflict,Kiểm tra ranh giới biên cứng (hộ lan guardrail)
+BDD19,calibration,edge,Kiểm tra khả năng nhận diện mảng bê tông vá trên đường nhựa (trường hợp surface transition)
+BDD01,blind,normal,Ảnh normal làm baseline kiểm tra độ chính xác cơ bản
+BDD18,blind,edge;low_visibility,Cảnh ban đêm có làn xe buýt sơn đỏ dễ nhầm lẫn
+BDD25,blind,edge;low_visibility,Phản quang mặt đường ướt ban đêm kiểm tra rule không cắt xẻ polygon
+BDD24,blind,critical;ambiguity,Đống tuyết đùn snowbank lấn chiếm lòng đường nguy hiểm
+BDD23,blind,ambiguity;edge,Mép đường bị tuyết và nước đọng che khuất cần escalate
