@@ -1,1 +1,8 @@
 sample_id,split,tags,reason
+BDD01,example,normal,Minh h?a vùng road rõ ràng
+BDD02,example,normal,Minh h?a vùng road rõ ràng
+BDD03,example,normal,Minh h?a vùng road rõ ràng
+BDD26,calibration,low_visibility,Minh ho? vùng road khó nhìn th?y trong ?êm
+BDD24,calibration,normal,Minh h?a vùng road rõ ràng
+BDD18,blind ,normal,Minh h?a vùng road rõ ràng
+BDD21,blind ,normal,Minh h?a vùng road rõ ràng
