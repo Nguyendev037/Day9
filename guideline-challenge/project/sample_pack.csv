@@ -1,4 +1,5 @@
 sample_id,split,tags,reason
+<<<<<<< HEAD
 BDD01,example,normal,Minh h?a vï¿½ng road rï¿½ rï¿½ng
 BDD02,example,normal,Minh h?a vï¿½ng road rï¿½ rï¿½ng
 BDD03,example,normal,Minh h?a vï¿½ng road rï¿½ rï¿½ng
@@ -6,3 +7,18 @@ BDD26,calibration,low_visibility,Minh ho? vï¿½ng road khï¿½ nhï¿½n th?y trong ?ï
 BDD24,calibration,normal,Minh h?a vï¿½ng road rï¿½ rï¿½ng
 BDD18,blind ,normal,Minh h?a vï¿½ng road rï¿½ rï¿½ng
 BDD21,blind ,normal,Minh h?a vï¿½ng road rï¿½ rï¿½ng
+=======
+BDD01,example,normal,
+BDD02,example,normal,
+BDD03,example,normal,
+BDD04,calibration,normal,
+BDD05,calibration,normal,
+BDD06,calibration,normal,
+BDD07,calibration,normal,
+BDD08,calibration,ambiguity,
+BDD09,calibration,normal,
+BDD24,calibration,conflict,
+BDD26,calibration,low_visibility,
+BDD18,blind ,normal,
+BDD21,blind ,normal,
+>>>>>>> 331a8bcb7c1abc557e08d28aea9d3de645ebc2bf
