@@ -2,54 +2,69 @@
 
 ## Bài toán
 
-Xác định và gán nhãn **drivable area** (vùng mặt đường có thể lái xe) trên ảnh BDD100K, đặc biệt trong các tình huống ranh giới giữa **roadway với vỉa hè, bãi đỗ xe, lề đường, dải phân cách hoặc vùng gạch chéo** khó phân biệt.
+Xác định và gán nhãn phân đoạn **drivable area** (vùng mặt đường xe có thể di chuyển) trên ảnh thuộc tập dữ liệu chuẩn **BDD100K**, phân định rõ ràng giữa làn di chuyển trực tiếp của xe tự chủ (**direct**) và các làn đường thay thế hợp lệ (**alternative**), đồng thời bóc tách chuẩn xác ranh giới giữa mặt đường di chuyển với **vỉa hè, lề đường (curb/shoulder), dải phân cách, bãi đỗ xe hoặc vùng vạch kẻ mắt võng/chữ V (gore/hatched area)**.
 
-**Mapping CVAT:** Trong CVAT, class được đặt tên là `road`, nhưng semantic là `drivable_area` theo định nghĩa của guideline. Peer cần ghi nhớ: **CVAT `road` = guideline `drivable_area`**.
+**Mapping CVAT:**
+Trong CVAT, nhằm tối ưu quy trình gán nhãn và tránh tạo nhiều class phức tạp, ta có thể triển khai theo 1 trong 2 phương án (ở đây chuẩn hóa theo thuộc tính phân loại):
+
+- Class CVAT: `road` (hoặc `drivable_area`).
+- Semantic Type (bắt buộc qua attribute `area_type`):
+  - **`direct`**: Khu vực làn xe hiện tại mà xe tự chủ (ego-vehicle) đang di chuyển trực tiếp bên trong (có quyền ưu tiên quỹ đạo cao nhất).
+  - **`alternative`**: Khu vực các làn đường khác cùng chiều xe chạy mà xe tự chủ có thể chuyển làn sang hợp pháp mà không vi phạm luật giao thông.
 
 ## Downstream contract
 
 1. **Downstream task / model / user là ai?**
-   Annotation được sử dụng cho hệ thống **nhận thức cảnh giao thông đường bộ**, cần biết chính xác vùng không gian mặt đường mà xe có thể sử dụng để di chuyển.
+   Dữ liệu được dùng để huấn luyện mô hình **Perception (Drivable Area Segmentation & Free-space Detection)** và cung cấp trực tiếp đầu vào cho module **Behavioral Planning & Trajectory Generation** (Lập kế hoạch quỹ đạo di chuyển và chuyển làn an toàn).
 
 2. **Output annotation nào thực sự cần?**
-
-   * **Geometry:** polygon.
-   * **Class:** `road` (trong CVAT) - **semantic: drivable_area** (theo guideline).
-   * **Attribute:** `needs_review = false/true`, `state = __undefined__/clear/ambiguous`.
-   * **Image-level tag:** `image_escalate` khi ambiguity ảnh hưởng đến toàn ảnh.
-     Chỉ sử dụng hình học nhìn thấy được, không suy đoán phần drivable area bị che hoàn toàn.
+   - **Geometry:** Polygon (hoặc multi-polygon khép kín).
+   - **Class:** `road` (trong CVAT) - **Semantic:** `drivable_area`.
+   - **Attributes cốt lõi:**
+     - `area_type = direct | alternative` (Bắt buộc phân định rõ theo chuẩn BDD100K).
+     - `state = clear | ambiguous`.
+     - `needs_review = false | true`.
+   - **Image-level tag:** `image_escalate` khi toàn ảnh bị suy giảm tầm nhìn nghiêm trọng (sương mù, chói lóa, ban đêm hoàn toàn không rõ làn) hoặc không thể xác định vị trí làn xe ego.
+   - **Nguyên tắc hình học:** Chỉ gán nhãn trên phần bề mặt đường nhìn thấy được (**visible-only**), không phỏng đoán các vùng bị che khuất hoàn toàn bởi xe cộ hoặc vật cản tĩnh.
 
 3. **Failure nào gây hậu quả lớn nhất?**
-   Lỗi nghiêm trọng nhất là **gán một vùng không drivable area thành drivable area hoặc bỏ sót một vùng drivable area lớn**, vì điều này làm sai không gian mà hệ thống nhận thức cho rằng xe có thể di chuyển.
+   - **False Positive (Vùng nguy hiểm nhất):** Gán vùng không thể đi được (vỉa hè, dải phân cách, làn ngược chiều có rào chắn, vùng công trường) thành `direct` hoặc `alternative`, gây nguy cơ va chạm nghiêm trọng cho xe tự hành.
+   - **Misclassification Direct vs. Alternative:** Đánh nhầm làn xe đang đi (`direct`) thành `alternative` hoặc ngược lại, làm gián đoạn bộ lập kế hoạch kiểm soát làn hiện tại.
+   - **False Negative:** Bỏ sót diện tích lớn mặt đường di chuyển hợp lệ làm hạn chế không gian tránh chướng ngại vật khẩn cấp.
 
 4. **Khi ambiguity không resolve được, ai / ở đâu là escalation path?**
-
-   * Ambiguity cục bộ: gán `needs_review=true` cho polygon bị ảnh hưởng.
-   * Ambiguity ở mức toàn ảnh: gán tag `image_escalate`.
-     Các trường hợp này được reviewer kiểm tra lại trong quy trình QA.
+   - Ambiguity cục bộ (ví dụ: vạch phân cách giữa làn direct và alternative bị mòn/mất dấu): Gán `needs_review=true` và đặt `state=ambiguous`.
+   - Ambiguity toàn ảnh (ví dụ: đường ngập nước, tuyết phủ trắng xóa không thấy tim đường): Gán tag `image_escalate`.
+   - Toàn bộ các trường hợp nghi vấn sẽ được chuyển lên Lead Reviewer trong các phiên QA/QC.
 
 ## Scope
 
-* **Trong scope (bắt buộc label):** làn đường xe cơ giới, làn rẽ, vùng nhập/tách làn, phần roadway tại giao lộ, mặt đường có lane marking hoặc crosswalk và phần roadway nhìn thấy xung quanh xe đang đỗ.
+- **Trong scope (Bắt buộc label):**
+  - **`direct`**: Làn đường hiện tại của ego vehicle, giới hạn bởi 2 vạch kẻ làn hai bên (lane markings) hoặc mép đường vật lý.
+  - **`alternative`**: Các làn đường hợp pháp kề cận (cùng chiều), làn rẽ mở rộng, vùng nhập làn/tách làn cao tốc, mặt đường ngã tư trong phạm vi quỹ đạo hợp lệ.
+  - Phần mặt đường nhìn thấy xung quanh các phương tiện đang lưu thông hoặc đang đỗ tạm thời.
 
-* **Ngoài scope (ignore):** vỉa hè, lối đi bộ, cỏ/thảm thực vật, dải phân cách, barrier/guardrail, đất/cát, khu vực chỉ dành cho parking, shoulder khẩn cấp được phân biệt rõ và vùng gore/hatched không dành cho xe di chuyển bình thường.
+- **Ngoài scope (Ignore / Không label):**
+  - Vỉa hè (sidewalk), lối đi bộ riêng biệt.
+  - Làn đường ngược chiều phân cách cứng hoặc vạch liền cấm lấn (trừ phi thiết kế cho phép chạy 2 chiều linh hoạt).
+  - Vùng đỗ xe chuyên dụng nằm ngoài luồng giao thông (parking bay/slots), trạm xăng, đường cụt tư nhân.
+  - Dải phân cách, rào chắn (guardrail), bồn cây, thảm cỏ, rãnh thoát nước.
+  - Đảo giao thông vẽ bằng sơn kẻ gạch chéo (gore area / chevron markings).
 
-* **Geometry tolerance:** polygon phải bám sát ranh giới vật lý nhìn thấy của drivable area; chấp nhận sai lệch nhỏ ở mức khoảng **2-3 px tại đường biên** do thao tác đặt điểm, nhưng không chấp nhận polygon ăn đáng kể sang vùng non-drivable area.
+- **Geometry tolerance:**
+  - Đường biên polygon phải bám sát ranh giới vạch kẻ hoặc mép mép đường vật lý; sai lệch chấp nhận tối đa **<= 2-3 px**.
+  - Tuyệt đối không để polygon ăn lấn sang vùng chướng ngại vật tĩnh hoặc vỉa hè.
 
 ## Output chấm được
 
-Blind test có thể chấm các quyết định:
+Blind test sẽ đánh giá trực tiếp dựa trên:
 
-* **LABEL:** class `road` (CVAT) = semantic `drivable_area` (guideline);
-* **IGNORE:** không tạo polygon cho vùng ngoài scope;
-* **UNKNOWN / ambiguity:** thể hiện bằng `needs_review=true`;
-* **ESCALATE:** thể hiện bằng tag `image_escalate`;
-* **GEOMETRY:** kiểm tra polygon có bám đúng ranh giới drivable area hay không.
-
-Mọi quyết định phải được thể hiện trực tiếp trong file export CVAT; quyết định chỉ giải thích bằng lời nhưng không xuất hiện trong annotation sẽ không được chấm.
-
-**Ghi chú:** tất cả reference đến `drivable_area` trong guideline tương đương với class `road` trong CVAT.
+- **CLASS & ATTRIBUTE:** Phân loại đúng `road` với `area_type` (`direct` vs `alternative`).
+- **IGNORE:** Loại bỏ đúng các vùng ngoài scope.
+- **AMBIGUITY FLAG:** Gán đúng `needs_review=true` và `state=ambiguous` tại các vùng tranh chấp/vạch mờ.
+- **ESCALATE:** Đặt tag `image_escalate` chính xác khi có điều kiện thời tiết khắc nghiệt.
+- **mIoU / BOUNDARY ACCURACY:** Đo lường độ trùng khớp hình học theo tiêu chuẩn IoU phân đoạn BDD100K.
 
 ## Dữ liệu và giới hạn
 
-Nguồn ảnh sử dụng là **BDD100K** trong `data/bdd100k/` của repo. Bộ này có **26 ảnh** đường phố và cao tốc với nhiều điều kiện như ban ngày, ban đêm, mưa, tuyết và các cảnh đô thị/highway. Nhóm dự kiến chọn một phần ảnh để làm `example`, `calibration` và `blind` theo `sample_pack.csv`. Không sử dụng dữ liệu ngoài repo.
+Sử dụng bộ dữ liệu **BDD100K** phân phối tại thư mục `data/bdd100k/` (tập con 26 ảnh đại diện cho các điều kiện ban ngày, ban đêm, mưa, ngược sáng, cao tốc và nội đô). Không nạp hoặc sử dụng thêm dữ liệu ngoài repository.
