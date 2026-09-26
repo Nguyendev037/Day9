@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "name": "road",
+    "id": 870,
+    "color": "#cc3366",
+    "type": "any",
+    "attributes": []
+  }
+]
