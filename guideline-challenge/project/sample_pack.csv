@@ -1,16 +1,7 @@
 sample_id,split,tags,reason
-<<<<<<< HEAD
-BDD01,example,normal,Minh h?a v�ng road r� r�ng
-BDD02,example,normal,Minh h?a v�ng road r� r�ng
-BDD03,example,normal,Minh h?a v�ng road r� r�ng
-BDD26,calibration,low_visibility,Minh ho? v�ng road kh� nh�n th?y trong ?�m
-BDD24,calibration,normal,Minh h?a v�ng road r� r�ng
-BDD18,blind ,normal,Minh h?a v�ng road r� r�ng
-BDD21,blind ,normal,Minh h?a v�ng road r� r�ng
-=======
-BDD01,example,normal,
-BDD02,example,normal,
-BDD03,example,normal,
+BDD01,example,normal,Minh hoa vung road ro rang
+BDD02,example,normal,Minh hoa vung road ro rang
+BDD03,example,normal,Minh hoa vung road ro rang
 BDD04,calibration,normal,
 BDD05,calibration,normal,
 BDD06,calibration,normal,
@@ -19,6 +10,5 @@ BDD08,calibration,ambiguity,
 BDD09,calibration,normal,
 BDD24,calibration,conflict,
 BDD26,calibration,low_visibility,
-BDD18,blind ,normal,
-BDD21,blind ,normal,
->>>>>>> 331a8bcb7c1abc557e08d28aea9d3de645ebc2bf
+BDD18,blind,normal,
+BDD21,blind,normal,
