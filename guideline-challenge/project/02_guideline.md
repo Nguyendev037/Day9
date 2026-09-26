@@ -1,6 +1,6 @@
 # Annotation guideline - Drivable Area Segmentation (BDD100K Standard)
 
-**Version:** v3
+**Version:** v2
 
 <!--
 v0 = chưa có bản nháp. Đổi dòng Version ở trên thành v1 khi xong bản nháp đầu, v2 sau calibration, v3 sau blind handoff; mỗi lần tăng version ghi một dòng vào 08_revision_log.md. `make freeze` đòi v2 trở lên.
@@ -51,8 +51,12 @@ Label **drivable area** (vùng mặt đường có thể lái xe) trên ảnh b�
 - **Shape:** Polygon khép kín.
 - **Type:** **Visible-only** (chỉ gán nhãn phần bề mặt đường thực sự nhìn thấy được qua camera; không suy đoán hoặc kéo polygon xuyên qua thân ô tô, xe tải hay vật cản).
 - **Tolerance:** Polygon phải ôm sát ranh giới vật lý hoặc mép vạch kẻ đường, sai lệch cho phép `<= 2px` mỗi cạnh.
+- **Minimum complexity:** Mỗi polygon **phải có ≥ 10 điểm** để đảm bảo độ chính xác; polygon quá đơn giản (< 10 điểm) sẽ bị Từ chối trong QA.
 - **Phân tách làn (`direct` vs `alternative`):** Ranh giới giữa 2 polygon bám dọc theo tim vạch kẻ sơn chia làn; không được để hở khe trống hoặc chồng lấn (overlap) giữa các polygon.
 - **Giao lộ / Crosswalk:** Polygon kéo dài liên tục qua các cụm vạch kẻ người đi bộ (crosswalk); không khoét rỗng theo các nan vạch sơn trắng/vàng.
+- **Gore area (vùng vạch chéo):** Phải **loại bỏ hoàn toàn** khỏi polygon; ranh giới polygon dừng ngay trước vùng vạch chéo. **Không được** vẽ xuyên qua hay bao quanh vùng vạch chéo (BDD05).
+- **Parking bay:** Polygon **dừng tại vạch sơn phân cách bãi đỗ** hoặc mép xe đỗ; không mở rộng vào vùng đỗ xe chuyên dụng (BDD10).
+- **Guardrail (hộ lan):** Polygon **kết thúc TẠI CHÂN** hộ lan; không bao giờ vượt qua hoặc bao gồm vùng phía sau hộ lan (BDD21).
 
 ---
 
@@ -79,10 +83,12 @@ Label **drivable area** (vùng mặt đường có thể lái xe) trên ảnh b�
 | Hiện trạng quan sát                    | Quyết định                  | Attributes                                 | Image Tag                            |
 | :------------------------------------- | :-------------------------- | :----------------------------------------- | :----------------------------------- |
 | Rõ ràng, vạch kẻ sắc nét               | LABEL                       | `state=clear`, `needs_review=false`        | Không                                |
-| Bị xe che khuất một phần (1-80%)       | LABEL (visible-only)        | Bo sát mép vỏ xe, gầm xe nhìn thấy         | Không                                |
+| Bị xe che khuất một phần (1-50%)      | LABEL (visible-only)        | Bo sát mép vỏ xe, gầm xe nhìn thấy         | Không                                |
+| Bị xe che khuất (51-80%)              | LABEL (visible-only)        | Bo sát mép vỏ xe; **`needs_review=true`**   | Không                                |
 | Che khuất 100%                         | IGNORE                      | Bỏ qua hoàn toàn, không phỏng đoán         | Không                                |
 | Bị tuyết phủ bẩn / nước mưa làm mờ mép | LABEL (phần thấy rõ)        | `state=ambiguous`, `needs_review=true`     | Không                                |
 | Đống tuyết đùn cao co hẹp lòng đường   | LABEL (phần nhựa đen lộ ra) | `state=ambiguous`, `needs_review=true`     | `image_escalate` (nếu mất tim đường) |
+| **Mảng bê tông vá (surface transition)** | LABEL                    | `state=ambiguous` nếu ranh giới mảng vá không rõ ràng | Không                                |
 | Mất hoàn toàn ranh giới toàn ảnh       | ESCALATE                    | Gán polygon khả nghi + `needs_review=true` | **`image_escalate`**                 |
 
 ---
@@ -99,7 +105,7 @@ _(Lưu ý: Các ví dụ dưới đây thuộc tập Example/Calibration, mô t�
 | **BDD10** | Tuyến phố có dải vạch trắng đỗ xe (parking bay)      | Polygon `area_type=direct` bám vạch sơn làn; loại bỏ hoàn toàn các hốc đỗ xe             | Mục 4 (loại trừ bãi đỗ sát curb)   |
 | **BDD13** | Đường phố có xe bán tải trắng che khuất tầm nhìn     | Polygon ôm sát bánh và đuôi xe bán tải; phủ trùm qua vạch crosswalk vàng                 | Mục 3 & 5 (visible-only)           |
 | **BDD14** | Cao tốc có paved shoulder rộng ngoài vạch liền trắng | Polygon bám mép trong vạch liền trắng; loại bỏ toàn bộ phần paved shoulder               | Mục 4 (loại trừ shoulder khẩn cấp) |
-| **BDD19** | Mảng bê tông vá đường có chất liệu khác biệt         | Polygon phủ liên tục qua cả mảng bê tông vá, không tách rời                              | Mục 4 (mảng vá đường)              |
+| **BDD19** | Mảng bê tông vá đường có chất liệu khác biệt         | Polygon phủ liên tục qua cả mảng bê tông vá, không tách rời; **nếu ranh giới mảng vá không rõ → gán `state=ambiguous`** | Mục 4 & 5 (mảng vá đường)              |
 | **BDD21** | Đường có dải hộ lan tôn sóng (guardrail) bên phải    | Polygon kết thúc tại chân hộ lan; không mở rộng ra hành lang phía sau                    | Mục 4 (hộ lan là biên cứng)        |
 | **BDD22** | Cao tốc rộng hoàng hôn thu hẹp dần về điểm tụ xa     | Kéo dài polygon dọc các làn xe đến điểm tụ xa nhất còn phân biệt được                    | Mục 3 (nhận diện tầm xa)           |
 
@@ -118,3 +124,7 @@ _(Lưu ý: Các ví dụ dưới đây thuộc tập Example/Calibration, mô t�
 | **Vượt qua dải hộ lan guardrail**             | Dừng điểm đặt polygon tại mép trong chân hộ lan                      | **BDD21**        |
 | **Dừng polygon trước mảng vá đường**          | Phủ kín bề mặt đường ngay cả khi chuyển đổi từ nhựa sang bê tông     | **BDD19**        |
 | **Gán làn ngược chiều thành alternative**     | Chỉ gán làn cùng chiều; làn ngược chiều có vạch đôi vàng phải IGNORE | **BDD04**        |
+| **Polygon quá đơn giản (< 10 điểm)** | Phải có ≥ 10 điểm để đảm bảo độ chính xác; nếu thiếu → thêm điểm ở các góc quan trọng | **BDD05, BDD10** |
+| **Ranh giới gore area không rõ** | Phải loại bỏ hoàn toàn vùng vạch chéo; polygon dừng ngay trước vạch chéo | **BDD05** |
+| **Parking bay boundary không nhất quán** | Polygon phải dừng tại vạch sơn phân cách bãi đỗ | **BDD10** |
+| **Occlusion xe tải xử lý khác nhau** | Bo sát mép xe nhìn thấy; vùng bị che ≥ 50% → needs_review=true | **BDD13** |
