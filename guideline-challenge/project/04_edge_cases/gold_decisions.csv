@@ -1,1 +1,13 @@
 sample_id,decision_id,expected,severity,rationale
+BDD05,d1,class=drivable_area (CVAT: road); count=3; IGNORE gore/hatched area,critical,Vùng gore/hatched không dành cho xe di chuyển, gán nhầm thành drivable area gây hiểu lầm downstream
+BDD05,d2,attribute:needs_review=false for all drivable_area polygons,low,Tất cả annotator đồng thuận không cần review
+BDD08,d1,class=drivable_area (CVAT: road); count=1; IGNORE reflection,critical,Reflection không phải drivable area thật, gán nhầm sẽ mở rộng sai vùng drivable area
+BDD08,d2,attribute:needs_review=false for clear drivable_area polygons,low,Không có ambiguity đáng kể
+BDD10,d1,class=drivable_area (CVAT: road); IGNORE parking-only area near curb,critical,Bỏ sót rule phân biệt drivable area vs parking gây sai downstream
+BDD23,d1,class=drivable_area (CVAT: road); attribute:needs_review=true for ambiguous boundary,major,Tuyết che boundary, uncertainty cục bộ cần review
+BDD24,d1,class=drivable_area (CVAT: road); attribute:needs_review=true for snow-covered boundary,major,Snowbank che boundary, cần chỉ định rõ vùng drivable area
+BDD25,d1,class=drivable_area (CVAT: road); LABEL despite reflection/glare,major,Wet road vẫn là drivable area, reflection không ảnh hưởng semantic
+BDD18,d1,class=drivable_area (CVAT: road); LABEL visible areas only; needs_review=true for dark regions,major,Đường đêm: chỉ label vùng nhìn thấy, dùng needs_review cho vùng tối
+BDD02,d1,class=drivable_area (CVAT: road); polygon continuous through crosswalk,medium,Crosswalk vẫn là phần của drivable area, không cắt ra khỏi polygon
+BDD21,d1,class=drivable_area (CVAT: road); IGNORE area behind guardrail,high,Guardrail là ranh giới, vùng phía sau không phải drivable area nếu không có bằng chứng
+BDD13,d1,class=drivable_area (CVAT: road); do not extend polygon through occluded vehicles,high,Không suy đoán phần drivable area bị xe che hoàn toàn
